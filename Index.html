@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Group Book Swiper</title>
+  <!-- Tailwind CSS for easy responsive styling -->
+  <script src="https://tailwindcss.com"></script>
+  <!-- Supabase CDN Client -->
+  <script src="https://jsdelivr.net"></script>
+  <style>
+    /* Prevent text selection during swiping gestures */
+    .no-select { -webkit-user-select: none; user-select: none; }
+  </style>
+</head>
+<body class="bg-slate-100 font-sans min-h-screen flex flex-col items-center justify-between p-4 no-select">
+
+  <!-- Setup Screen / Username Prompt -->
+  <div id="setup-screen" class="fixed inset-0 bg-slate-900 flex flex-col items-center justify-center p-6 z-50 text-white">
+    <h1 class="text-3xl font-bold mb-4">📚 Book Swiper</h1>
+    <p class="text-slate-400 mb-6 text-center max-w-sm">Enter your name so the app knows who is swiping and adding books.</p>
+    <input type="text" id="username-input" placeholder="Your Name" class="w-full max-w-xs px-4 py-2 rounded bg-slate-800 border border-slate-700 text-white text-center focus:outline-none focus:border-indigo-500 mb-4">
+    <button onclick="saveUsername()" class="w-full max-w-xs bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded font-semibold transition">Join Pool</button>
+  </div>
+
+  <!-- Header -->
+  <header class="w-full max-w-md flex justify-between items-center py-2 border-b border-slate-200">
+    <div>
+      <h2 class="text-xl font-bold text-slate-800">Book Swipe Pool</h2>
+      <p id="user-display" class="text-xs text-slate-500"></p>
+    </div>
+    <button onclick="toggleModal(true)" class="bg-indigo-600 text-white px-3 py-1.5 rounded-full text-sm font-semibold shadow hover:bg-indigo-700 transition">+ Add Book</button>
+  </header>
+
+  <!-- Swiper Container Area -->
+  <main class="relative w-full max-w-md h-[450px] flex items-center justify-center my-auto">
+    <!-- Message display when stack is completely empty -->
+    <div id="empty-state" class="text-center p-6 hidden">
+      <p class="text-lg font-medium text-slate-600">No books left to swipe!</p>
+      <p class="text-sm text-slate-400 mt-1">Add some new books or wait for friends to add theirs.</p>
+    </div>
+
+    <!-- The actual card stack wrapper -->
+    <div id="card-container" class="relative w-72 h-96 flex items-center justify-center"></div>
+  </main>
+
+  <!-- Bottom Navigation Actions -->
+  <footer class="w-full max-w-md flex justify-around items-center py-4">
+    <button onclick="handleManualSwipe('left')" class="bg-red-100 hover:bg-red-200 text-red-600 p-4 rounded-full shadow-lg transition">
+      ❌ Left (Skip)
+    </button>
+    <button onclick="handleManualSwipe('right')" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-600 p-4 rounded-full shadow-lg transition">
+      ❤️ Right (Keep)
+    </button>
+  </footer>
+
+  <!-- Modal for Submitting New Books -->
+  <div id="add-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-40">
+    <div class="bg-white rounded-xl p-6 w-full max-w-sm shadow-2xl">
+      <h3 class="text-lg font-bold text-slate-800 mb-4">Suggest a New Book</h3>
+      <div class="space-y-3">
+        <input type="text" id="book-title" placeholder="Book Title" class="w-full border border-slate-300 p-2 rounded focus:outline-none focus:border-indigo-500">
+        <input type="text" id="book-author" placeholder="Author (Optional)" class="w-full border border-slate-300 p-2 rounded focus:outline-none focus:border-indigo-500">
+      </div>
+      <div class="flex justify-end space-x-2 mt-6">
+        <button onclick="toggleModal(false)" class="px-4 py-2 border border-slate-300 rounded text-slate-600 hover:bg-slate-50">Cancel</button>
+        <button onclick="submitBook()" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Add to Pool</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- CONFIGURATION ---
+    // PASTE YOUR SUPABASE CREDENTIALS HERE:
+    const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL";
+    const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+
+    const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let currentUser = localStorage.getItem('swiper_username') || '';
+    let bookQueue = [];
+
+    // --- SETUP / AUTH FLOW ---
+    if (currentUser) {
+      document.getElementById('setup-screen').classList.add('hidden');
+      initApp();
+    }
+
+    function saveUsername() {
+      const name = document.getElementById('username-input').value.trim();
+      if (!name) return alert("Please enter a name.");
+      localStorage.setItem('swiper_username', name);
+      currentUser = name;
+      document.getElementById('setup-screen').classList.add('hidden');
+      initApp();
+    }
+
+    function initApp() {
+      document.getElementById('user-display').innerText = `Swiping as: ${currentUser}`;
+      loadUnswipedBooks();
+      
+      // Listen for real-time additions to the database pool
+      supabase
+        .channel('schema-db-changes')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'books' }, payload => {
+          // If the current user didn't create it, feed it into the active queue
+          if (payload.new.added_by !== currentUser) {
+            loadUnswipedBooks();
+          }
+        })
+        .subscribe();
+    }
+
+    // --- DATA HANDLING ---
+    async function loadUnswipedBooks() {
+      // Fetch books that the user hasn't swiped on yet
+      const { data: swipedBookIds } = await supabase
+        .from('swipes')
+        .select('book_id')
+        .eq('user_id', currentUser);
+
+      const excludedIds = swipedBookIds.map(s => s.book_id);
+
+      let query = supabase.from('books').select('*').order('created_at', { ascending: false });
+      if (excludedIds.length > 0) {
+        query = query.not('id', 'in', `(${excludedIds.join(',')})`);
+      }
+
+      const { data: books, error } = await query;
+      if (error) console.error("Error updating deck:", error);
+
+      bookQueue = books || [];
+      renderDeck();
+    }
+
+    function renderDeck() {
+      const container = document.getElementById('card-container');
+      const emptyState = document.getElementById('empty-state');
+      container.innerHTML = '';
+
+      if (bookQueue.length === 0) {
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      emptyState.classList.add('hidden');
+
+      // Build out the top interactive visual card inside the view window
+      const topBook = bookQueue[bookQueue.length - 1];
+      const card = document.createElement('div');
+      card.className = "absolute inset-0 bg-white border border-slate-200 rounded-2xl shadow-xl p-6 flex flex-col justify-between transition-transform duration-300 transform cursor-grab active:cursor-grabbing";
+      card.id = `card-${topBook.id}`;
+      card.innerHTML = `
+        <div class="mt-8 text-center">
+          <div class="text-4xl mb-4">📖</div>
+          <h3 class="text-2xl font-bold text-slate-800 line-clamp-3">${topBook.title}</h3>
+          <p class="text-md text-slate-500 mt-2">${topBook.author || 'Unknown Author'}</p>
+        </div>
+        <div class="text-center text-xs text-slate-400 border-t pt-4">
+          Suggested by: ${topBook.added_by}
+        </div>
+      `;
+
+      setupSwipeGestures(card, topBook.id);
+      container.appendChild(card);
+    }
+
+    // --- SWIPE LOGIC ---
+    function setupSwipeGestures(el, bookId) {
+      let startX = 0;
+      let currentX = 0;
+      const swipeThreshold = 100;
+
+      el.addEventListener('touchstart', e => { startX = e.touches[0].clientX; });
+      el.addEventListener('touchmove', e => {
+        currentX = e.touches[0].clientX;
+        const diffX = currentX - startX;
+        el.style.transform = `translateX(${diffX}px) rotate(${diffX / 15}deg)`;
+      });
+
+      el.addEventListener('touchend', () => {
+        const diffX = currentX - startX;
+        if (Math.abs(diffX) > swipeThreshold) {
+          const dir = diffX > 0 ? 'right' : 'left';
+          executeSwipe(bookId, dir, el);
+        } else {
+          el.style.transform = 'translateX(0px) rotate(0deg)';
+        }
+        startX = currentX = 0;
+      });
+    }
+
+    function handleManualSwipe(direction) {
+      if (bookQueue.length === 0) return;
+      const topBook = bookQueue[bookQueue.length - 1];
+      const el = document.getElementById(`card-${topBook.id}`);
+      executeSwipe(topBook.id, direction, el);
+    }
+
+    async function executeSwipe(bookId, direction, cardEl) {
+      if (cardEl) {
+        const flyX = direction === 'right' ? 500 : -500;
+        cardEl.style.transform = `translateX(${flyX}px) rotate(${flyX / 10}deg)`;
+        cardEl.style.opacity = '0';
+      }
+
+      // Log swipe parameters to cloud Supabase instance
+      await supabase.from('swipes').insert([{ user_id: currentUser, book_id: bookId, direction }]);
+      
+      // Advance structural memory slice
+      bookQueue.pop();
+      setTimeout(() => { renderDeck(); }, 200);
+    }
+
+    // --- MODAL AND WRITE ACTIONS ---
+    function toggleModal(show) {
+      document.getElementById('add-modal').classList.toggle('hidden', !show);
+    }
+
+    async function submitBook() {
+      const title = document.getElementById('book-title').value.trim();
+      const author = document.getElementById('book-author').value.trim();
+
+      if (!title) return alert("Title is required!");
+
+      const { error } = await supabase.from('books').insert([{ title, author, added_by: currentUser }]);
+      if (error) return alert("Error appending book data: " + error.message);
+
+      // Clean inputs and dismiss view
+      document.getElementById('book-title').value = '';
+      document.getElementById('book-author').value = '';
+      toggleModal(false);
+      loadUnswipedBooks();
+    }
+  </script>
+</body>
+</html>
