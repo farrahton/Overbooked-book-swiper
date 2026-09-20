@@ -1,6 +1,6 @@
 // --- CONFIGURATION ---
-const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL"; 
-const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+const SUPABASE_URL = "https://hixflcifimnsutwzevim.supabase.co"; 
+const SUPABASE_ANON_KEY = "sb_publishable_NxOlmZjO9B-EJnb6xtckvA_Ak129OON";
 
 async function supabaseRequest(path, options = {}) {
   const url = `${SUPABASE_URL}/rest/v1/${path}`;
