@@ -1,6 +1,5 @@
 @import url('https://googleapis.com');
 
-/* Base Layout Configs */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -9,23 +8,23 @@
 
 body {
   font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
-  background-color: #fdfbf7; /* Warm Editorial Paper Tone */
-  color: #2c2724; /* Soft Charcoal instead of harsh black */
+  background-color: #fdfbf7;
+  color: #2c2724;
   min-height: 100vh;
+  /* Use fallback values for older mobile browsers */
+  min-height: -webkit-fill-available; 
   display: flex;
-  flex-col: column;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: 24px;
+  padding: 16px 20px; /* Reduced vertical space for small devices */
+  overflow: hidden;
 }
 
-/* Typography Overrides */
 .font-serif {
   font-family: 'Playfair Display', Georgia, serif;
 }
 
-/* Touch Safety Properties */
 .no-select {
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -37,20 +36,21 @@ body {
   transition: none !important;
 }
 
-/* Layout Frame Definitions */
+/* Header Framework Adjustments */
 header {
   width: 100%;
-  max-width: 400px;
+  max-width: 360px;
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  padding-top: 16px;
-  padding-bottom: 24px;
+  padding-top: 8px;
+  padding-bottom: 16px;
   border-b: 1px solid rgba(44, 39, 36, 0.1);
+  flex-shrink: 0;
 }
 
 header h2 {
-  font-size: 24px;
+  font-size: 20px; /* Scaled down slightly */
   font-weight: 600;
   color: #1c1917;
 }
@@ -58,25 +58,19 @@ header h2 {
 header p {
   font-size: 10px;
   text-transform: uppercase;
-  tracking-letter: 0.05em;
+  letter-spacing: 0.05em;
   color: #a8a29e;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
-/* Minimalist Bookish Buttons */
 .btn-outline {
   background: transparent;
   border: 1px solid #d6d3d1;
   color: #44403c;
-  padding: 8px 16px;
+  padding: 6px 12px;
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 11px;
   cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.btn-outline:hover {
-  background-color: #f5f4f0;
 }
 
 .btn-primary {
@@ -91,27 +85,22 @@ header p {
   letter-spacing: 0.05em;
   cursor: pointer;
   width: 100%;
-  transition: background-color 0.2s;
 }
 
-.btn-primary:hover {
-  background-color: #1c1917;
-}
-
-/* Main Swiper Deck Layouts */
+/* FLUID DECK AREA: Scales automatically relative to window heights */
 main {
   position: relative;
   width: 100%;
-  max-width: 400px;
-  height: 460px;
+  max-width: 340px;
+  height: 52vh; /* Uses view height percentage to prevent mini screens from clipping */
+  margin-top: auto;
+  margin-bottom: auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: auto;
-  margin-bottom: auto;
 }
 
-/* The Swipe Cards */
+/* The Responsive Swipe Cards */
 .book-card {
   position: absolute;
   top: 0;
@@ -121,49 +110,27 @@ main {
   background: #ffffff;
   border: 1px solid #e7e5e4;
   border-radius: 16px;
-  padding: 32px;
+  padding: 20px; /* Reduced from 32px to create text margins */
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  cursor: grab;
+  justify-content: flex-start;
   box-shadow: 0 4px 20px -2px rgba(44, 39, 36, 0.06), 0 2px 6px -1px rgba(44, 39, 36, 0.03);
-}
-
-.book-card:active {
-  cursor: grabbing;
-}
-
-.card-quote-mark {
-  color: #e7e5e4;
-  font-size: 32px;
-  font-style: italic;
-  margin-bottom: 24px;
-  text-align: center;
+  overflow: hidden;
 }
 
 .card-title {
-  font-size: 24px;
+  font-size: 18px; /* Optimized sizing for iPhone mini windows */
   font-weight: 500;
   color: #1c1917;
   line-height: 1.3;
-  margin-bottom: 16px;
+  margin-bottom: 4px;
 }
 
 .card-author {
-  font-size: 13px;
+  font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: #78716c;
-}
-
-.card-footer {
-  text-align: center;
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #a8a29e;
-  border-top: 1px solid #f5f4f0;
-  padding-top: 16px;
 }
 
 /* Empty State / Leaderboard Screen */
@@ -173,25 +140,25 @@ main {
   background: #ffffff;
   border: 1px solid #e7e5e4;
   border-radius: 16px;
-  padding: 32px;
+  padding: 24px;
   text-align: center;
   box-shadow: 0 4px 20px -2px rgba(44, 39, 36, 0.06);
 }
 
 .leaderboard-container {
-  margin-top: 24px;
-  max-height: 220px;
+  margin-top: 16px;
+  max-height: 240px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .leaderboard-row {
   background: #fafaf9;
   border: 1px solid #e7e5e4;
-  border-left: 4px solid #881337; /* Warm burgundy accent spine */
-  padding: 12px;
+  border-left: 4px solid #881337;
+  padding: 10px;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -205,21 +172,23 @@ main {
   color: #44403c;
   font-size: 10px;
   font-weight: 600;
-  padding: 4px 10px;
+  padding: 4px 8px;
   border-radius: 12px;
   white-space: nowrap;
 }
 
-/* Bottom Actions Panel */
+/* Bottom Controls */
 footer {
   width: 100%;
-  max-w: 400px;
+  max-width: 360px;
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 48px;
-  padding-top: 24px;
-  border-top: 1px solid #f5f4f0;
+  gap: 40px;
+  padding-top: 16px;
+  padding-bottom: 12px;
+  border-t: 1px solid #f5f4f0;
+  flex-shrink: 0;
 }
 
 .footer-btn {
@@ -233,9 +202,7 @@ footer {
 }
 
 .btn-pass { color: #a8a29e; font-weight: 500; }
-.btn-pass:hover { color: #57534e; }
 .btn-keep { color: #881337; font-weight: 600; }
-.btn-keep:hover { color: #4c0519; }
 
 .divider-line {
   height: 16px;
@@ -243,7 +210,7 @@ footer {
   background-color: #e7e5e4;
 }
 
-/* Modal Popup Overlays */
+/* Modal Layout Overrides */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -259,44 +226,27 @@ footer {
   background-color: #fdfbf7;
   border: 1px solid #e7e5e4;
   border-radius: 12px;
-  padding: 24px;
+  padding: 20px;
   width: 100%;
-  max-width: 360px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  max-width: 320px;
 }
 
 .modal-input {
   width: 100%;
   background: #ffffff;
   border: 1px solid #e7e5e4;
-  padding: 12px;
+  padding: 10px;
   border-radius: 6px;
   font-size: 14px;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   outline: none;
-}
-
-.modal-input:focus {
-  border-color: #a8a29e;
 }
 
 .modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 16px;
-  margin-top: 24px;
+  margin-top: 16px;
 }
 
-.btn-cancel {
-  background: transparent;
-  border: none;
-  color: #a8a29e;
-  font-size: 11px;
-  text-transform: uppercase;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  cursor: pointer;
-}
-
-/* Helper Utilities */
 .hidden { display: none !important; }
