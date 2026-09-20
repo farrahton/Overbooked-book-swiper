@@ -254,3 +254,39 @@ footer {
 }
 
 .hidden { display: none !important; }
+
+
+/* Swipe Action Feedback Badges */
+.swipe-indicator {
+  position: absolute;
+  
+  /* FIXED: Forces badges to the very top margin area of the card, away from text flows */
+  top: 20px; 
+  
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 6px 12px;
+  border-radius: 6px;
+  opacity: 0;
+  z-index: 50; /* Forces overlay rendering on top of covers, text, and descriptions */
+  pointer-events: none;
+  transition: opacity 0.1s ease;
+}
+
+.indicator-keep {
+  right: 20px;
+  border: 2px solid #065f46;
+  color: #065f46;
+  background-color: rgba(209, 250, 229, 0.95);
+  transform: rotate(8deg); /* Clean, dynamic tilt stamp look */
+}
+
+.indicator-pass {
+  left: 20px;
+  border: 2px solid #991b1b;
+  color: #991b1b;
+  background-color: rgba(254, 226, 226, 0.95);
+  transform: rotate(-8deg);
+}
