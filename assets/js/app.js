@@ -3,7 +3,7 @@ import { apiGetUnswipedBooks, apiLogSwipe, apiAddBook, apiGetMatches } from './d
 let currentUser = localStorage.getItem('swiper_username') || '';
 let bookQueue = [];
 
-// Expose these lifecycle handlers explicitly to the inline HTML layer
+// Expose handlers explicitly to inline HTML template onClick listeners
 window.saveUsername = saveUsername;
 window.handleManualSwipe = handleManualSwipe;
 window.toggleModal = toggleModal;
@@ -58,8 +58,6 @@ async function renderDeck() {
     winningBooks.forEach(book => {
       const item = document.createElement('div');
       item.className = "leaderboard-row";
-      
-      // FIXED: Completely clean template variables (No backslashes)
       item.innerHTML = `
         <div style="min-width: 0; flex: 1; padding-right: 12px; display: flex; gap: 8px; align-items: center;">
           ${book.cover_url ? `<img src="\${book.cover_url}" style="width: 24px; height: auto; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.15);">` : ''}
@@ -85,7 +83,6 @@ async function renderDeck() {
   
   const starRating = topBook.rating ? `⭐ ${Number(topBook.rating).toFixed(1)} / 5` : '';
 
-  // FIXED: Completely clean template variables (No backslashes)
   card.innerHTML = `
     <div style="text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; overflow-y: auto; max-height: 100%; width: 100%;">
       ${topBook.cover_url ? `<img src="\${topBook.cover_url}" style="width: 90px; height: 135px; object-fit: cover; border-radius: 6px; box-shadow: 0 4px 12px rgba(44,39,36,0.15); margin-bottom: 4px;">` : '<div class="card-quote-mark font-serif">“</div>'}
@@ -156,7 +153,6 @@ function toggleModal(show) {
 async function submitBook() {
   const title = document.getElementById('book-title').value.trim();
   const author = document.getElementById('book-author').value.trim();
-  
   const manualCover = document.getElementById('book-cover-manual').value.trim();
   const manualDesc = document.getElementById('book-description-manual').value.trim();
 

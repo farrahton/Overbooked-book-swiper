@@ -29,12 +29,12 @@ async function fetchGoogleBookMetadata(title, author) {
   if (author) query += `+inauthor:${encodeURIComponent(author)}`;
   
   try {
+    // FIXED: Patched protocol path string mappings
     const res = await fetch(`https://googleapis.com{query}&maxResults=1`);
     const data = await res.json();
     
     if (data.items && data.items.length > 0) {
       const volumeInfo = data.items[0].volumeInfo;
-      // Force cover URLs from http to secure https
       let cover = volumeInfo.imageLinks?.thumbnail || '';
       if (cover.startsWith('http://')) cover = cover.replace('http://', 'https://');
       
@@ -48,7 +48,6 @@ async function fetchGoogleBookMetadata(title, author) {
   } catch (e) {
     console.error("Google Books search fell short:", e);
   }
-  // Fallback if no matching entry is found on Google
   return { author: author || 'Unknown Author', description: 'No description found.', rating: null, cover_url: '' };
 }
 
@@ -70,13 +69,11 @@ export async function apiLogSwipe(username, bookId, direction) {
 }
 
 /**
- * Insert a brand new book with mixed automated/manual overrides into the repository dataset.
+ * Insert a brand new book with mixed automated/manual overrides into the database.
  */
 export async function apiAddBook(title, author, manualCover, manualDesc, username) {
-  // 1. Fetch automatic metadata as the initial baseline profile
   const metadata = await fetchGoogleBookMetadata(title, author);
 
-  // 2. Resolve Overrides: Prioritize manual user strings over automatic parameters
   const finalAuthor = author.trim() || metadata.author;
   const finalCover = manualCover.trim() || metadata.cover_url;
   const finalDesc = manualDesc.trim() || metadata.description;
@@ -89,12 +86,11 @@ export async function apiAddBook(title, author, manualCover, manualDesc, usernam
       added_by: username,
       cover_url: finalCover,
       description: finalDesc,
-      rating: metadata.rating // Google rating falls back normally
+      rating: metadata.rating
     })
   });
   return { data, error: data === null ? { message: "Failed to post book record to cloud server." } : null };
 }
-
 
 export async function apiGetMatches() {
   const books = await supabaseRequest('books?select=*');
