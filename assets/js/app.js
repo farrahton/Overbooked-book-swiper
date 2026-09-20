@@ -1,4 +1,4 @@
-import { apiGetUnswipedBooks, apiLogSwipe, apiAddBook } from './db.js';
+import { apiGetUnswipedBooks, apiLogSwipe, apiAddBook, apiGetMatches } from './db.js';
 
 let currentUser = localStorage.getItem('swiper_username') || '';
 let bookQueue = [];

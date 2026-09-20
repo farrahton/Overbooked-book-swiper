@@ -74,24 +74,27 @@ export async function apiGetMatches() {
   const books = await supabaseRequest('books?select=*');
   const swipes = await supabaseRequest('swipes?direction=eq.right&select=book_id,user_id');
   
-  if (!books || !swipes) return [];
+  if (!books || !Array.isArray(books) || !swipes || !Array.isArray(swipes)) {
+    return [];
+  }
 
-  // Group right swipes together by book_id and store who voted for them
+  // Count unique votes for each book ID
   const matchCounts = {};
   swipes.forEach(s => {
-    if (!matchCounts[s.book_id]) {
-      matchCounts[s.book_id] = { count: 0, voters: [] };
+    const bId = String(s.book_id);
+    if (!matchCounts[bId]) {
+      matchCounts[bId] = { count: 0, voters: [] };
     }
-    // Prevent double counting if unique constraint isn't active
-    if (!matchCounts[s.book_id].voters.includes(s.user_id)) {
-      matchCounts[s.book_id].count += 1;
-      matchCounts[s.book_id].voters.push(s.user_id);
+    const cleanUser = String(s.user_id).trim();
+    if (!matchCounts[bId].voters.includes(cleanUser)) {
+      matchCounts[bId].count += 1;
+      matchCounts[bId].voters.push(cleanUser);
     }
   });
 
-  // Map the vote counts onto your books array
+  // Combine the mapped stats back into the book structures
   const leaderboard = books.map(book => {
-    const data = matchCounts[book.id] || { count: 0, voters: [] };
+    const data = matchCounts[String(book.id)] || { count: 0, voters: [] };
     return {
       ...book,
       voteCount: data.count,
@@ -99,10 +102,8 @@ export async function apiGetMatches() {
     };
   });
 
-  // Filter out books that have fewer than 3 votes (so low-interest books stay off the board)
-  // and sort the remaining books from highest votes to lowest votes
+  // Filter out anything with less than 1 vote and sort from highest to lowest
   return leaderboard
-    .filter(book => book.voteCount >= 3)
+    .filter(book => book.voteCount >= 1)
     .sort((a, b) => b.voteCount - a.voteCount);
 }
-
