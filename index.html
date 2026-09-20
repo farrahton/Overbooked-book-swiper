@@ -4,71 +4,69 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>The Book Pool</title>
-  <script src="https://tailwindcss.com"></script>
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
-<body class="min-h-screen flex flex-col items-center justify-between p-6 no-select">
+<body class="no-select">
 
   
-  <div id="setup-screen" class="fixed inset-0 bg-stone-900 flex flex-col items-center justify-center p-6 z-50 text-stone-100">
-    <h1 class="font-serif text-4xl italic mb-3">the book pool.</h1>
-    <p class="text-stone-400 text-xs mb-8 tracking-wide text-center max-w-xs font-light">Enter your reader signature to join your club's stack.</p>
-    <input type="text" id="username-input" placeholder="Your Name" class="w-full max-w-xs px-4 py-3 rounded-md bg-stone-800 border border-stone-700 text-stone-100 text-center tracking-wide focus:outline-none focus:border-stone-400 text-sm mb-4">
-    <button onclick="saveUsername()" class="w-full max-w-xs bg-stone-100 hover:bg-white text-stone-900 py-3 rounded-md text-xs uppercase tracking-wider font-semibold transition">Enter Lounge</button>
+  <div id="setup-screen" class="modal-overlay" style="background-color: #1c1917;">
+    <div style="text-align: center; color: #f5f4f0; width: 100%; max-width: 320px;">
+      <h1 class="font-serif" style="font-size: 36px; font-style: italic; margin-bottom: 12px;">the book pool.</h1>
+      <p style="color: #a8a29e; font-size: 12px; font-weight: 300; letter-spacing: 0.05em; margin-bottom: 32px;">Enter your reader signature to join your club's stack.</p>
+      <input type="text" id="username-input" placeholder="Your Name" class="modal-input" style="background: #2c2724; border-color: #44403c; color: #ffffff; text-align: center; margin-bottom: 16px;">
+      <button onclick="saveUsername()" class="btn-primary" style="background: #f5f4f0; color: #1c1917;">Enter Lounge</button>
+    </div>
   </div>
 
-  <!-- Header Layout Elements -->
-  <header class="w-full max-w-md flex justify-between items-baseline pt-4 pb-6 border-b border-stone-200/80">
+  <!-- Header -->
+  <header>
     <div>
-      <h2 class="font-serif text-2xl italic font-semibold text-stone-800 tracking-tight">The Reading Stack</h2>
-      <p id="user-display" class="text-[10px] uppercase tracking-wider font-medium text-stone-400 mt-1"></p>
+      <h2 class="font-serif" style="font-style: italic;">The Reading Stack</h2>
+      <p id="user-display"></p>
     </div>
-    <button onclick="toggleModal(true)" class="border border-stone-300 hover:bg-stone-100 text-stone-700 px-4 py-1.5 rounded-full text-xs tracking-wide transition font-medium">+ Add Title</button>
+    <button onclick="toggleModal(true)" class="btn-outline">+ Add Title</button>
   </header>
 
-  <!-- Interactive Card Windows Stack Container -->
-  <main class="relative w-full max-w-md h-[460px] flex items-center justify-center my-auto">
-    
-    <!-- Empty State Leaderboard Display Template -->
-    <div id="empty-state" class="w-full max-w-xs text-center p-8 hidden bg-[#fcfbfa] border border-stone-200 rounded-xl book-shadow">
-      <div class="text-xl mb-2 text-stone-400">✨</div>
-      <h3 class="font-serif text-xl italic text-stone-800">End of the Chapter</h3>
-      <p class="text-[11px] text-stone-400 tracking-wide mt-1 mb-6 font-light">Here is where your group stands on current choices:</p>
+  <!-- Swiper Window Arena -->
+  <main>
+    <!-- Empty State Leaderboard Display Dashboard -->
+    <div id="empty-state" class="empty-box hidden">
+      <div style="font-size: 24px; margin-bottom: 8px; color: #a8a29e;">✨</div>
+      <h3 class="font-serif" style="font-size: 20px; font-style: italic;">End of the Chapter</h3>
+      <p style="font-size: 11px; color: #78716c; margin-top: 4px; font-weight: 300;">Here is where your group stands on current choices:</p>
       
-      <div id="end-matches-list" class="space-y-3 max-h-56 overflow-y-auto text-left pr-1"></div>
+      <!-- Leaderboard injection point -->
+      <div id="end-matches-list" class="leaderboard-container"></div>
     </div>
 
-    <!-- Active Card Frame -->
-    <div id="card-container" class="relative w-72 h-[380px] flex items-center justify-center"></div>
+    <!-- Active Card Frame Target Wrapper -->
+    <div id="card-container" style="position: relative; width: 100%; height: 100%;"></div>
   </main>
 
-  <!-- Bottom Interaction Panel -->
-  <footer class="w-full max-w-md flex justify-center gap-12 items-center py-6 border-t border-stone-100">
-    <button onclick="handleManualSwipe('left')" class="text-stone-400 hover:text-stone-600 px-4 py-2 text-xs tracking-wider uppercase transition font-medium">
-      Pass
-    </button>
-    <div class="h-4 w-px bg-stone-200"></div>
-    <button onclick="handleManualSwipe('right')" class="text-rose-900 hover:text-rose-950 px-4 py-2 text-xs tracking-wider uppercase transition font-semibold">
-      Keep
-    </button>
+  <!-- Action Controls -->
+  <footer>
+    <button onclick="handleManualSwipe('left')" class="footer-btn btn-pass">Pass</button>
+    <div class="divider-line"></div>
+    <button onclick="handleManualSwipe('right')" class="footer-btn btn-keep">Keep</button>
   </footer>
 
-  <!-- Submission Entry Dialogue -->
-  <div id="add-modal" class="fixed inset-0 bg-stone-900/40 backdrop-blur-xs hidden flex items-center justify-center p-4 z-40">
-    <div class="bg-[#fdfbf7] rounded-lg p-6 w-full max-w-sm border border-stone-200 shadow-xl">
-      <h3 class="font-serif text-lg italic text-stone-800 mb-4">Propose to Stack</h3>
-      <div class="space-y-3">
-        <input type="text" id="book-title" placeholder="Title" class="w-full bg-white border border-stone-200 p-2.5 rounded text-sm text-stone-800 focus:outline-none focus:border-stone-400 placeholder-stone-400">
-        <input type="text" id="book-author" placeholder="Author" class="w-full bg-white border border-stone-200 p-2.5 rounded text-sm text-stone-800 focus:outline-none focus:border-stone-400 placeholder-stone-400">
+  <!-- Submission Form Popover Dialogue -->
+  <div id="add-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h3 class="font-serif" style="font-size: 18px; font-style: italic; margin-bottom: 16px; color: #1c1917;">Propose to Stack</h3>
+      <div>
+        <input type="text" id="book-title" placeholder="Title" class="modal-input">
+        <input type="text" id="book-author" placeholder="Author" class="modal-input">
       </div>
-      <div class="flex justify-end space-x-3 mt-6 text-xs uppercase tracking-wider font-semibold">
-        <button onclick="toggleModal(false)" class="px-3 py-2 text-stone-400 hover:text-stone-600 transition">Dismiss</button>
-        <button onclick="submitBook()" class="px-4 py-2 bg-stone-800 text-white rounded hover:bg-stone-900 transition">Submit</button>
+      <div class="modal-actions">
+        <button onclick="toggleModal(false)" class="btn-cancel">Dismiss</button>
+        <button onclick="submitBook()" class="btn-primary" style="width: auto;">Submit</button>
       </div>
     </div>
   </div>
 
-  <script src="assets/js/db.js?v=3" type="module"></script>
-  <script src="assets/js/app.js?v=3" type="module"></script>
+  <!-- Application Script Endpoints Configuration Versioned Hooks -->
+  <script src="assets/js/db.js?v=4" type="module"></script>
+  <script src="assets/js/app.js?v=4" type="module"></script>
 </body>
 </html>

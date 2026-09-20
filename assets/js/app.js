@@ -74,29 +74,6 @@ async function renderDeck() {
     return;
   }
   
-  emptyState.classList.add('hidden');
-
-  const topBook = bookQueue[bookQueue.length - 1];
-  const card = document.createElement('div');
-  card.className = "absolute inset-0 bg-white border border-stone-200 rounded-xl book-shadow p-8 flex flex-col justify-between transition-transform duration-300 transform cursor-grab active:cursor-grabbing";
-  card.id = `card-${topBook.id}`;
-  card.innerHTML = `
-    <div class="mt-12 text-center">
-      <div class="text-stone-300 font-serif text-3xl italic mb-6">“</div>
-      <h3 class="font-serif text-2xl font-medium text-stone-800 leading-snug line-clamp-4">${topBook.title}</h3>
-      <p class="text-xs uppercase tracking-wider font-medium text-stone-400 mt-4">${topBook.author || 'Unknown Author'}</p>
-    </div>
-    <div class="text-center text-[10px] uppercase tracking-wider text-stone-400 border-t border-stone-100 pt-4 font-light">
-      Cataloged by: ${topBook.added_by}
-    </div>
-  `;
-
-  setupSwipeGestures(card, topBook.id);
-  container.appendChild(card);
-});
-    return;
-  }
-  
   // IF CARDS EXIST: Render the active swipe card normally
   emptyState.classList.add('hidden');
 
