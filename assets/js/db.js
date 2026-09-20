@@ -1,18 +1,30 @@
 // --- CONFIGURATION ---
-const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL";
-const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+const SUPABASE_URL = "https://hixflcifimnsutwzevim.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_NxOlmZjO9B-EJnb6xtckvA_Ak129OON";
 
-// Initialize client abstraction layer
-const supabase = Supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Declare a global placeholder variable
+let supabase;
+
+/**
+ * Safely initialize the client abstraction layer after the CDN loads.
+ */
+function initSupabaseClient() {
+  if (!supabase) {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+}
 
 /**
  * Fetch books from Supabase that the specific current user hasn't swiped on yet.
  */
 async function apiGetUnswipedBooks(username) {
+  initSupabaseClient(); // <-- Ensures it's initialized before running queries
+  
   const { data: swipedBooks } = await supabase
     .from('swipes')
     .select('book_id')
     .eq('user_id', username);
+// ... keep the rest of your original db.js file exactly the same ...
 
   const excludedIds = swipedBooks ? swipedBooks.map(s => s.book_id) : [];
 

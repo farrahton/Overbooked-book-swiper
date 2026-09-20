@@ -17,12 +17,16 @@ function saveUsername() {
 }
 
 function initApp() {
+  // Ensure the database client is generated safely
+  initSupabaseClient(); 
+  
   document.getElementById('user-display').innerText = `Swiping as: ${currentUser}`;
   refreshDeck();
   
   // Connect a websocket hook to capture third-party data entries in real-time
   supabase
     .channel('schema-db-changes')
+// ... keep the rest of your initApp() function exactly the same ...
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'books' }, payload => {
       if (payload.new.added_by !== currentUser) {
         refreshDeck();
