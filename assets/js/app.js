@@ -61,14 +61,20 @@ async function renderDeck() {
       return;
     }
 
-    winningBooks.forEach(book => {
+       winningBooks.forEach(book => {
       const item = document.createElement('div');
-      item.className = "bg-slate-50 border border-emerald-100 p-2.5 rounded-lg border-l-4 border-l-emerald-500 shadow-sm flex items-start gap-2.5";
+      item.className = "bg-slate-50 border border-indigo-100 p-2.5 rounded-lg border-l-4 border-l-indigo-500 shadow-sm flex items-center justify-between gap-2.5";
       item.innerHTML = `
-        <div class="text-md mt-0.5">📖</div>
-        <div>
-          <h4 class="font-bold text-slate-800 text-xs line-clamp-2">${book.title}</h4>
-          <p class="text-[10px] text-slate-400 truncate">${book.author || 'Unknown Author'}</p>
+        <div class="flex items-start gap-2 text-left">
+          <div class="text-md mt-0.5">📖</div>
+          <div>
+            <h4 class="font-bold text-slate-800 text-xs line-clamp-2">${book.title}</h4>
+            <p class="text-[10px] text-slate-400 truncate">${book.author || 'Unknown Author'}</p>
+          </div>
+        </div>
+        <!-- Vote Badge Counter -->
+        <div class="bg-indigo-100 text-indigo-700 font-bold text-xs px-2 py-1 rounded-full whitespace-nowrap">
+          👍 ${book.voteCount} Votes
         </div>
       `;
       matchesList.appendChild(item);

@@ -68,7 +68,7 @@ export async function apiAddBook(title, author, username) {
 }
 
 /**
- * Pull all swipe parameters from the cloud to calculate group alignments natively.
+ * Pull all books and swipes from the cloud to calculate a group preference leaderboard.
  */
 export async function apiGetMatches() {
   const books = await supabaseRequest('books?select=*');
@@ -76,19 +76,33 @@ export async function apiGetMatches() {
   
   if (!books || !swipes) return [];
 
-  // Group right swipes together by book_id
+  // Group right swipes together by book_id and store who voted for them
   const matchCounts = {};
   swipes.forEach(s => {
-    matchCounts[s.book_id] = (matchCounts[s.book_id] || 0) + 1;
+    if (!matchCounts[s.book_id]) {
+      matchCounts[s.book_id] = { count: 0, voters: [] };
+    }
+    // Prevent double counting if unique constraint isn't active
+    if (!matchCounts[s.book_id].voters.includes(s.user_id)) {
+      matchCounts[s.book_id].count += 1;
+      matchCounts[s.book_id].voters.push(s.user_id);
+    }
   });
 
-  // Calculate unique active swiping profiles found inside the log history
-  const totalUsersInDatabase = new Set(swipes.map(s => s.user_id)).size;
-
-  // Filter books that match our unanimous requirements
-  return books.filter(book => {
-    const rightSwipesOnThisBook = matchCounts[book.id] || 0;
-    // Considered a mutual match if it received right swipes from all active users (min 2 users)
-    return totalUsersInDatabase >= 2 && rightSwipesOnThisBook === totalUsersInDatabase;
+  // Map the vote counts onto your books array
+  const leaderboard = books.map(book => {
+    const data = matchCounts[book.id] || { count: 0, voters: [] };
+    return {
+      ...book,
+      voteCount: data.count,
+      voters: data.voters
+    };
   });
+
+  // Filter out books that have fewer than 3 votes (so low-interest books stay off the board)
+  // and sort the remaining books from highest votes to lowest votes
+  return leaderboard
+    .filter(book => book.voteCount >= 3)
+    .sort((a, b) => b.voteCount - a.voteCount);
 }
+
