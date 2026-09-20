@@ -3,7 +3,7 @@ import { apiGetUnswipedBooks, apiLogSwipe, apiAddBook, apiGetMatches } from './d
 let currentUser = localStorage.getItem('swiper_username') || '';
 let bookQueue = [];
 
-// Expose internal lifecycle methods to the HTML template layer explicitly
+// Expose these lifecycle handlers explicitly to the inline HTML layer
 window.saveUsername = saveUsername;
 window.handleManualSwipe = handleManualSwipe;
 window.toggleModal = toggleModal;
@@ -27,7 +27,7 @@ function initApp() {
   document.getElementById('user-display').innerText = `Swiping as: ${currentUser}`;
   refreshDeck();
   
-  // High-reliability background sync: Check for new group additions every 10 seconds
+  // High-reliability sync: Check for new group additions every 10 seconds
   setInterval(() => {
     refreshDeck();
   }, 10000);
@@ -38,15 +38,12 @@ async function refreshDeck() {
   renderDeck();
 }
 
-// Don't forget to add apiGetMatches to your top import string statement:
-import { apiGetUnswipedBooks, apiLogSwipe, apiAddBook, apiGetMatches } from './db.js';
-
 async function renderDeck() {
   const container = document.getElementById('card-container');
   const emptyState = document.getElementById('empty-state');
   container.innerHTML = '';
 
-  // IF THE USER RUNS OUT OF CARDS: Calculate and render mutual choices
+  // IF THE USER RUNS OUT OF CARDS: Calculate and render mutual choices leaderboard
   if (bookQueue.length === 0) {
     emptyState.classList.remove('hidden');
     
@@ -61,7 +58,7 @@ async function renderDeck() {
       return;
     }
 
-       winningBooks.forEach(book => {
+    winningBooks.forEach(book => {
       const item = document.createElement('div');
       item.className = "bg-slate-50 border border-indigo-100 p-2.5 rounded-lg border-l-4 border-l-indigo-500 shadow-sm flex items-center justify-between gap-2.5";
       item.innerHTML = `
@@ -72,7 +69,6 @@ async function renderDeck() {
             <p class="text-[10px] text-slate-400 truncate">${book.author || 'Unknown Author'}</p>
           </div>
         </div>
-        <!-- Vote Badge Counter -->
         <div class="bg-indigo-100 text-indigo-700 font-bold text-xs px-2 py-1 rounded-full whitespace-nowrap">
           👍 ${book.voteCount} Votes
         </div>
