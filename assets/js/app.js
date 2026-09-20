@@ -38,15 +38,45 @@ async function refreshDeck() {
   renderDeck();
 }
 
-function renderDeck() {
+// Don't forget to add apiGetMatches to your top import string statement:
+import { apiGetUnswipedBooks, apiLogSwipe, apiAddBook, apiGetMatches } from './db.js';
+
+async function renderDeck() {
   const container = document.getElementById('card-container');
   const emptyState = document.getElementById('empty-state');
   container.innerHTML = '';
 
+  // IF THE USER RUNS OUT OF CARDS: Calculate and render mutual choices
   if (bookQueue.length === 0) {
     emptyState.classList.remove('hidden');
+    
+    const matchesList = document.getElementById('end-matches-list');
+    matchesList.innerHTML = `<p class="text-xs text-slate-400 text-center py-4 animate-pulse">Calculating group choices...</p>`;
+    
+    const winningBooks = await apiGetMatches();
+    matchesList.innerHTML = '';
+
+    if (winningBooks.length === 0) {
+      matchesList.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">No group consensus matches yet. Wait for friends to finish swiping!</p>`;
+      return;
+    }
+
+    winningBooks.forEach(book => {
+      const item = document.createElement('div');
+      item.className = "bg-slate-50 border border-emerald-100 p-2.5 rounded-lg border-l-4 border-l-emerald-500 shadow-sm flex items-start gap-2.5";
+      item.innerHTML = `
+        <div class="text-md mt-0.5">📖</div>
+        <div>
+          <h4 class="font-bold text-slate-800 text-xs line-clamp-2">${book.title}</h4>
+          <p class="text-[10px] text-slate-400 truncate">${book.author || 'Unknown Author'}</p>
+        </div>
+      `;
+      matchesList.appendChild(item);
+    });
     return;
   }
+  
+  // IF CARDS EXIST: Render the active swipe card normally
   emptyState.classList.add('hidden');
 
   const topBook = bookQueue[bookQueue.length - 1];

@@ -66,3 +66,29 @@ export async function apiAddBook(title, author, username) {
   });
   return { data, error: data === null ? { message: "Failed to post book record to cloud server." } : null };
 }
+
+/**
+ * Pull all swipe parameters from the cloud to calculate group alignments natively.
+ */
+export async function apiGetMatches() {
+  const books = await supabaseRequest('books?select=*');
+  const swipes = await supabaseRequest('swipes?direction=eq.right&select=book_id,user_id');
+  
+  if (!books || !swipes) return [];
+
+  // Group right swipes together by book_id
+  const matchCounts = {};
+  swipes.forEach(s => {
+    matchCounts[s.book_id] = (matchCounts[s.book_id] || 0) + 1;
+  });
+
+  // Calculate unique active swiping profiles found inside the log history
+  const totalUsersInDatabase = new Set(swipes.map(s => s.user_id)).size;
+
+  // Filter books that match our unanimous requirements
+  return books.filter(book => {
+    const rightSwipesOnThisBook = matchCounts[book.id] || 0;
+    // Considered a mutual match if it received right swipes from all active users (min 2 users)
+    return totalUsersInDatabase >= 2 && rightSwipesOnThisBook === totalUsersInDatabase;
+  });
+}
