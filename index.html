@@ -3,75 +3,72 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Group Book Swiper</title>
-  <!-- Tailwind CSS Engine -->
+  <title>The Book Pool</title>
   <script src="https://tailwindcss.com"></script>
-  <!-- Custom CSS Layer -->
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
-<body class="bg-slate-100 font-sans min-h-screen flex flex-col items-center justify-between p-4 no-select">
+<body class="min-h-screen flex flex-col items-center justify-between p-6 no-select">
 
   
-  <div id="setup-screen" class="fixed inset-0 bg-slate-900 flex flex-col items-center justify-center p-6 z-50 text-white">
-    <h1 class="text-3xl font-bold mb-4">📚 Book Swiper</h1>
-    <p class="text-slate-400 mb-6 text-center max-w-sm">Enter your name so the app tracks who is swiping and adding books.</p>
-    <input type="text" id="username-input" placeholder="Your Name" class="w-full max-w-xs px-4 py-2 rounded bg-slate-800 border border-slate-700 text-white text-center focus:outline-none focus:border-indigo-500 mb-4">
-    <button onclick="saveUsername()" class="w-full max-w-xs bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded font-semibold transition">Join Pool</button>
+  <div id="setup-screen" class="fixed inset-0 bg-stone-900 flex flex-col items-center justify-center p-6 z-50 text-stone-100">
+    <h1 class="font-serif text-4xl italic mb-3">the book pool.</h1>
+    <p class="text-stone-400 text-xs mb-8 tracking-wide text-center max-w-xs font-light">Enter your reader signature to join your club's stack.</p>
+    <input type="text" id="username-input" placeholder="Your Name" class="w-full max-w-xs px-4 py-3 rounded-md bg-stone-800 border border-stone-700 text-stone-100 text-center tracking-wide focus:outline-none focus:border-stone-400 text-sm mb-4">
+    <button onclick="saveUsername()" class="w-full max-w-xs bg-stone-100 hover:bg-white text-stone-900 py-3 rounded-md text-xs uppercase tracking-wider font-semibold transition">Enter Lounge</button>
   </div>
 
-  <!-- Header Section -->
-  <header class="w-full max-w-md flex justify-between items-center py-2 border-b border-slate-200">
+  <!-- Header Layout Elements -->
+  <header class="w-full max-w-md flex justify-between items-baseline pt-4 pb-6 border-b border-stone-200/80">
     <div>
-      <h2 class="text-xl font-bold text-slate-800">Book Swipe Pool</h2>
-      <p id="user-display" class="text-xs text-slate-500"></p>
+      <h2 class="font-serif text-2xl italic font-semibold text-stone-800 tracking-tight">The Reading Stack</h2>
+      <p id="user-display" class="text-[10px] uppercase tracking-wider font-medium text-stone-400 mt-1"></p>
     </div>
-    <button onclick="toggleModal(true)" class="bg-indigo-600 text-white px-3 py-1.5 rounded-full text-sm font-semibold shadow hover:bg-indigo-700 transition">+ Add Book</button>
+    <button onclick="toggleModal(true)" class="border border-stone-300 hover:bg-stone-100 text-stone-700 px-4 py-1.5 rounded-full text-xs tracking-wide transition font-medium">+ Add Title</button>
   </header>
 
-    <!-- Main Deck View Window -->
-  <main class="relative w-full max-w-md h-[450px] flex items-center justify-center my-auto">
-    <!-- Updated Empty State Holder containing your End-of-Deck matches list -->
-    <div id="empty-state" class="w-full max-w-xs text-center p-6 hidden bg-white border border-slate-200 rounded-2xl shadow-xl">
-      <div class="text-3xl mb-2">🏆</div>
-      <h3 class="text-xl font-bold text-slate-800">You're All Caught Up!</h3>
-      <p class="text-xs text-slate-400 mt-1 mb-4">Here are the books your group has agreed on so far:</p>
+  <!-- Interactive Card Windows Stack Container -->
+  <main class="relative w-full max-w-md h-[460px] flex items-center justify-center my-auto">
+    
+    <!-- Empty State Leaderboard Display Template -->
+    <div id="empty-state" class="w-full max-w-xs text-center p-8 hidden bg-[#fcfbfa] border border-stone-200 rounded-xl book-shadow">
+      <div class="text-xl mb-2 text-stone-400">✨</div>
+      <h3 class="font-serif text-xl italic text-stone-800">End of the Chapter</h3>
+      <p class="text-[11px] text-stone-400 tracking-wide mt-1 mb-6 font-light">Here is where your group stands on current choices:</p>
       
-      <!-- List container where matches inject -->
-      <div id="end-matches-list" class="space-y-2 max-h-60 overflow-y-auto text-left"></div>
+      <div id="end-matches-list" class="space-y-3 max-h-56 overflow-y-auto text-left pr-1"></div>
     </div>
 
-    <!-- Interactive Swiper Layer -->
-    <div id="card-container" class="relative w-72 h-96 flex items-center justify-center"></div>
+    <!-- Active Card Frame -->
+    <div id="card-container" class="relative w-72 h-[380px] flex items-center justify-center"></div>
   </main>
 
-
-  <!-- Manual Swipe Triggers -->
-  <footer class="w-full max-w-md flex justify-around items-center py-4">
-    <button onclick="handleManualSwipe('left')" class="bg-red-100 hover:bg-red-200 text-red-600 p-4 rounded-full shadow-lg transition">
-      ❌ Left (Skip)
+  <!-- Bottom Interaction Panel -->
+  <footer class="w-full max-w-md flex justify-center gap-12 items-center py-6 border-t border-stone-100">
+    <button onclick="handleManualSwipe('left')" class="text-stone-400 hover:text-stone-600 px-4 py-2 text-xs tracking-wider uppercase transition font-medium">
+      Pass
     </button>
-    <button onclick="handleManualSwipe('right')" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-600 p-4 rounded-full shadow-lg transition">
-      ❤️ Right (Keep)
+    <div class="h-4 w-px bg-stone-200"></div>
+    <button onclick="handleManualSwipe('right')" class="text-rose-900 hover:text-rose-950 px-4 py-2 text-xs tracking-wider uppercase transition font-semibold">
+      Keep
     </button>
   </footer>
 
-  <!-- Modal for Submitting New Database Rows -->
-  <div id="add-modal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-40">
-    <div class="bg-white rounded-xl p-6 w-full max-w-sm shadow-2xl">
-      <h3 class="text-lg font-bold text-slate-800 mb-4">Suggest a New Book</h3>
+  <!-- Submission Entry Dialogue -->
+  <div id="add-modal" class="fixed inset-0 bg-stone-900/40 backdrop-blur-xs hidden flex items-center justify-center p-4 z-40">
+    <div class="bg-[#fdfbf7] rounded-lg p-6 w-full max-w-sm border border-stone-200 shadow-xl">
+      <h3 class="font-serif text-lg italic text-stone-800 mb-4">Propose to Stack</h3>
       <div class="space-y-3">
-        <input type="text" id="book-title" placeholder="Book Title" class="w-full border border-slate-300 p-2 rounded focus:outline-none focus:border-indigo-500">
-        <input type="text" id="book-author" placeholder="Author (Optional)" class="w-full border border-slate-300 p-2 rounded focus:outline-none focus:border-indigo-500">
+        <input type="text" id="book-title" placeholder="Title" class="w-full bg-white border border-stone-200 p-2.5 rounded text-sm text-stone-800 focus:outline-none focus:border-stone-400 placeholder-stone-400">
+        <input type="text" id="book-author" placeholder="Author" class="w-full bg-white border border-stone-200 p-2.5 rounded text-sm text-stone-800 focus:outline-none focus:border-stone-400 placeholder-stone-400">
       </div>
-      <div class="flex justify-end space-x-2 mt-6">
-        <button onclick="toggleModal(false)" class="px-4 py-2 border border-slate-300 rounded text-slate-600 hover:bg-slate-50">Cancel</button>
-        <button onclick="submitBook()" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Add to Pool</button>
+      <div class="flex justify-end space-x-3 mt-6 text-xs uppercase tracking-wider font-semibold">
+        <button onclick="toggleModal(false)" class="px-3 py-2 text-stone-400 hover:text-stone-600 transition">Dismiss</button>
+        <button onclick="submitBook()" class="px-4 py-2 bg-stone-800 text-white rounded hover:bg-stone-900 transition">Submit</button>
       </div>
     </div>
   </div>
 
-  <!-- Native JavaScript Modules -->
-  <script src="assets/js/db.js" type="module"></script>
-  <script src="assets/js/app.js" type="module"></script>
+  <script src="assets/js/db.js?v=3" type="module"></script>
+  <script src="assets/js/app.js?v=3" type="module"></script>
 </body>
 </html>

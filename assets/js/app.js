@@ -43,38 +43,57 @@ async function renderDeck() {
   const emptyState = document.getElementById('empty-state');
   container.innerHTML = '';
 
-  // IF THE USER RUNS OUT OF CARDS: Calculate and render mutual choices leaderboard
   if (bookQueue.length === 0) {
     emptyState.classList.remove('hidden');
     
     const matchesList = document.getElementById('end-matches-list');
-    matchesList.innerHTML = `<p class="text-xs text-slate-400 text-center py-4 animate-pulse">Calculating group choices...</p>`;
+    matchesList.innerHTML = `<p class="text-[11px] text-stone-400 text-center py-4 tracking-wider animate-pulse">Consulting records...</p>`;
     
     const winningBooks = await apiGetMatches();
     matchesList.innerHTML = '';
 
     if (winningBooks.length === 0) {
-      matchesList.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">No group consensus matches yet. Wait for friends to finish swiping!</p>`;
+      matchesList.innerHTML = `<p class="text-[11px] text-stone-400 text-center py-4 font-light">No group consensus matches yet. Wait for friends to finish swiping!</p>`;
       return;
     }
 
     winningBooks.forEach(book => {
       const item = document.createElement('div');
-      item.className = "bg-slate-50 border border-indigo-100 p-2.5 rounded-lg border-l-4 border-l-indigo-500 shadow-sm flex items-center justify-between gap-2.5";
+      item.className = "bg-white border border-stone-200 p-3 rounded-lg shadow-2xs flex items-center justify-between gap-3";
       item.innerHTML = `
-        <div class="flex items-start gap-2 text-left">
-          <div class="text-md mt-0.5">📖</div>
-          <div>
-            <h4 class="font-bold text-slate-800 text-xs line-clamp-2">${book.title}</h4>
-            <p class="text-[10px] text-slate-400 truncate">${book.author || 'Unknown Author'}</p>
-          </div>
+        <div class="text-left min-w-0 flex-1">
+          <h4 class="font-serif font-medium text-stone-800 text-sm line-clamp-1">${book.title}</h4>
+          <p class="text-[10px] text-stone-400 uppercase tracking-wider truncate mt-0.5">${book.author || 'Unknown Author'}</p>
         </div>
-        <div class="bg-indigo-100 text-indigo-700 font-bold text-xs px-2 py-1 rounded-full whitespace-nowrap">
-          👍 ${book.voteCount} Votes
+        <div class="border border-stone-200 text-stone-600 font-medium text-[10px] px-2.5 py-1 rounded-full whitespace-nowrap tracking-wide bg-stone-50">
+          ${book.voteCount} Votes
         </div>
       `;
       matchesList.appendChild(item);
     });
+    return;
+  }
+  
+  emptyState.classList.add('hidden');
+
+  const topBook = bookQueue[bookQueue.length - 1];
+  const card = document.createElement('div');
+  card.className = "absolute inset-0 bg-white border border-stone-200 rounded-xl book-shadow p-8 flex flex-col justify-between transition-transform duration-300 transform cursor-grab active:cursor-grabbing";
+  card.id = `card-${topBook.id}`;
+  card.innerHTML = `
+    <div class="mt-12 text-center">
+      <div class="text-stone-300 font-serif text-3xl italic mb-6">“</div>
+      <h3 class="font-serif text-2xl font-medium text-stone-800 leading-snug line-clamp-4">${topBook.title}</h3>
+      <p class="text-xs uppercase tracking-wider font-medium text-stone-400 mt-4">${topBook.author || 'Unknown Author'}</p>
+    </div>
+    <div class="text-center text-[10px] uppercase tracking-wider text-stone-400 border-t border-stone-100 pt-4 font-light">
+      Cataloged by: ${topBook.added_by}
+    </div>
+  `;
+
+  setupSwipeGestures(card, topBook.id);
+  container.appendChild(card);
+});
     return;
   }
   
