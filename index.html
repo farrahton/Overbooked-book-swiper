@@ -28,14 +28,23 @@
     <button onclick="toggleModal(true)" class="bg-indigo-600 text-white px-3 py-1.5 rounded-full text-sm font-semibold shadow hover:bg-indigo-700 transition">+ Add Book</button>
   </header>
 
-  <!-- Interactive Card Windows Stack Container -->
+    <!-- Main Deck View Window -->
   <main class="relative w-full max-w-md h-[450px] flex items-center justify-center my-auto">
-    <div id="empty-state" class="text-center p-6 hidden">
-      <p class="text-lg font-medium text-slate-600">No books left to swipe!</p>
-      <p class="text-sm text-slate-400 mt-1">Add some new books or wait for friends to add theirs.</p>
+    
+    <!-- Updated Empty State Holder containing your End-of-Deck matches list -->
+    <div id="empty-state" class="w-full max-w-xs text-center p-6 hidden bg-white border border-slate-200 rounded-2xl shadow-xl">
+      <div class="text-3xl mb-2">🏆</div>
+      <h3 class="text-xl font-bold text-slate-800">You're All Caught Up!</h3>
+      <p class="text-xs text-slate-400 mt-1 mb-4">Here are the books your group has agreed on so far:</p>
+      
+      <!-- List container where matches inject -->
+      <div id="end-matches-list" class="space-y-2 max-h-60 overflow-y-auto text-left"></div>
     </div>
+
+    <!-- Interactive Swiper Layer -->
     <div id="card-container" class="relative w-72 h-96 flex items-center justify-center"></div>
   </main>
+
 
   <!-- Manual Swipe Triggers -->
   <footer class="w-full max-w-md flex justify-around items-center py-4">
