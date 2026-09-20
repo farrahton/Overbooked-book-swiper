@@ -64,13 +64,12 @@
     </div>
   </div>
 
-    <!-- JavaScript Project Modules -->
-  <!-- 1. Load Supabase CDN Client SDK first -->
-  <script src="https://jsdelivr.net"></script>
-  
-  <!-- 2. Load your custom scripts with 'defer' to ensure correct execution order -->
-  <script src="assets/js/db.js" defer></script>
-  <script src="assets/js/app.js" defer></script>
-</body>
-
+   <!-- JavaScript Project Modules -->
+  <!-- 1. Load Supabase via cdnjs (NO jsdelivr) -->  
+   <script src="https://cloudflare.com"></script> 
+   <!-- 2. Load your custom scripts --> 
+   <script src="assets/js/db.js" defer></script> 
+   <script src="assets/js/app.js" defer>
+   </script> 
+  </body> 
 </html>
