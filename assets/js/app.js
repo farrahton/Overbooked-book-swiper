@@ -45,50 +45,59 @@ async function renderDeck() {
 
   if (bookQueue.length === 0) {
     emptyState.classList.remove('hidden');
-    
     const matchesList = document.getElementById('end-matches-list');
-    matchesList.innerHTML = `<p class="text-[11px] text-stone-400 text-center py-4 tracking-wider animate-pulse">Consulting records...</p>`;
-    
+    matchesList.innerHTML = `<p style="font-size: 11px; color: #a8a29e; text-align: center; padding: 16px 0;">Consulting database logs...</p>`;
     const winningBooks = await apiGetMatches();
     matchesList.innerHTML = '';
 
     if (winningBooks.length === 0) {
-      matchesList.innerHTML = `<p class="text-[11px] text-stone-400 text-center py-4 font-light">No group consensus matches yet. Wait for friends to finish swiping!</p>`;
+      matchesList.innerHTML = `<p style="font-size: 11px; color: #a8a29e; text-align: center; padding: 16px 0; font-weight: 300;">No group matches yet. Wait for friends to finish swiping!</p>`;
       return;
     }
 
     winningBooks.forEach(book => {
       const item = document.createElement('div');
-      item.className = "bg-white border border-stone-200 p-3 rounded-lg shadow-2xs flex items-center justify-between gap-3";
+      item.className = "leaderboard-row";
       item.innerHTML = `
-        <div class="text-left min-w-0 flex-1">
-          <h4 class="font-serif font-medium text-stone-800 text-sm line-clamp-1">${book.title}</h4>
-          <p class="text-[10px] text-stone-400 uppercase tracking-wider truncate mt-0.5">${book.author || 'Unknown Author'}</p>
+        <div style="min-width: 0; flex: 1; padding-right: 12px; display: flex; gap: 8px; align-items: center;">
+          ${book.cover_url ? `<img src="\${book.cover_url}" style="width: 24px; h-auto; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.15);">` : ''}
+          <div style="min-width: 0; flex: 1;">
+            <h4 class="font-serif" style="font-size: 13px; font-weight: 500; color: #1c1917; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${book.title}</h4>
+            <p style="font-size: 9px; text-transform: uppercase; color: #a8a29e; letter-spacing: 0.03em; margin-top: 1px;">${book.author || 'Unknown'}</p>
+          </div>
         </div>
-        <div class="border border-stone-200 text-stone-600 font-medium text-[10px] px-2.5 py-1 rounded-full whitespace-nowrap tracking-wide bg-stone-50">
-          ${book.voteCount} Votes
-        </div>
+        <div class="badge-votes">${book.voteCount} Votes</div>
       `;
       matchesList.appendChild(item);
     });
     return;
   }
   
-  // IF CARDS EXIST: Render the active swipe card normally
   emptyState.classList.add('hidden');
 
   const topBook = bookQueue[bookQueue.length - 1];
   const card = document.createElement('div');
-  card.className = "absolute inset-0 bg-white border border-slate-200 rounded-2xl shadow-xl p-6 flex flex-col justify-between transition-transform duration-300 transform cursor-grab active:cursor-grabbing";
+  card.className = "book-card";
+  // Increase sizing slightly to contain the summary fields
+  card.style.height = "100%";
   card.id = `card-${topBook.id}`;
+  
+  // Format rating string if available
+  const starRating = topBook.rating ? `⭐ ${Number(topBook.rating).toFixed(1)} / 5` : '';
+
   card.innerHTML = `
-    <div class="mt-8 text-center">
-      <div class="text-4xl mb-4">📖</div>
-      <h3 class="text-2xl font-bold text-slate-800 line-clamp-3">${topBook.title}</h3>
-      <p class="text-md text-slate-500 mt-2">${topBook.author || 'Unknown Author'}</p>
+    <div style="text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; overflow-y: auto; max-height: 80%;">
+      ${topBook.cover_url ? `<img src="\${topBook.cover_url}" style="width: 90px; height: 135px; object-fit: cover; border-radius: 6px; box-shadow: 0 4px 12px rgba(44,39,36,0.15); margin-bottom: 4px;">` : '<div class="card-quote-mark font-serif">“</div>'}
+      
+      <div style="padding: 0 4px;">
+        <h3 class="font-serif card-title" style="font-size: 20px; margin-bottom: 4px; line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden;">${topBook.title}</h3>
+        <p class="card-author" style="font-size: 11px; margin-bottom: 4px;">${topBook.author || 'Unknown Author'}</p>
+        ${starRating ? `<p style="font-size: 10px; color: #ca8a04; font-weight: 600; letter-spacing: 0.02em; margin-bottom: 8px;">\${starRating}</p>` : ''}
+        <p style="font-size: 11px; color: #57534e; text-align: justify; line-height: 1.5; font-weight: 300; display: -webkit-box; -webkit-box-orient: vertical; line-clamp: 4; overflow: hidden; margin-top: 4px;">${topBook.description || 'No summary available.'}</p>
+      </div>
     </div>
-    <div class="text-center text-xs text-slate-400 border-t pt-4">
-      Suggested by: ${topBook.added_by}
+    <div class="card-footer" style="margin-top: auto;">
+      Cataloged by: ${topBook.added_by}
     </div>
   `;
 

@@ -1,10 +1,7 @@
 // --- CONFIGURATION ---
-const SUPABASE_URL = "https://hixflcifimnsutwzevim.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_NxOlmZjO9B-EJnb6xtckvA_Ak129OON";
+const SUPABASE_URL = "YOUR_SUPABASE_PROJECT_URL"; 
+const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
 
-/**
- * Base communication function executing direct REST HTTP fetch queries natively.
- */
 async function supabaseRequest(path, options = {}) {
   const url = `${SUPABASE_URL}/rest/v1/${path}`;
   const headers = {
@@ -13,13 +10,9 @@ async function supabaseRequest(path, options = {}) {
     "Content-Type": "application/json",
     ...options.headers
   };
-  
   try {
     const response = await fetch(url, { ...options, headers });
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Database error Response: ${response.status} - ${errorText}`);
-    }
+    if (!response.ok) throw new Error(`Database error: ${response.status}`);
     if (response.status === 204) return [];
     return await response.json();
   } catch (err) {
@@ -29,26 +22,46 @@ async function supabaseRequest(path, options = {}) {
 }
 
 /**
- * Fetch books that the user has not swiped on yet.
+ * Natively query the free Google Books API to pull cover metadata.
  */
+async function fetchGoogleBookMetadata(title, author) {
+  let query = `intitle:${encodeURIComponent(title)}`;
+  if (author) query += `+inauthor:${encodeURIComponent(author)}`;
+  
+  try {
+    const res = await fetch(`https://googleapis.com{query}&maxResults=1`);
+    const data = await res.json();
+    
+    if (data.items && data.items.length > 0) {
+      const volumeInfo = data.items[0].volumeInfo;
+      // Force cover URLs from http to secure https
+      let cover = volumeInfo.imageLinks?.thumbnail || '';
+      if (cover.startsWith('http://')) cover = cover.replace('http://', 'https://');
+      
+      return {
+        author: volumeInfo.authors ? volumeInfo.authors.join(', ') : author || 'Unknown Author',
+        description: volumeInfo.description || 'No description available for this volume.',
+        rating: volumeInfo.averageRating || null,
+        cover_url: cover
+      };
+    }
+  } catch (e) {
+    console.error("Google Books search fell short:", e);
+  }
+  // Fallback if no matching entry is found on Google
+  return { author: author || 'Unknown Author', description: 'No description found.', rating: null, cover_url: '' };
+}
+
 export async function apiGetUnswipedBooks(username) {
-  // 1. Fetch IDs of books this user already swiped on
   const swipedData = await supabaseRequest(`swipes?user_id=eq.${encodeURIComponent(username)}&select=book_id`);
   const excludedIds = swipedData ? swipedData.map(s => s.book_id) : [];
 
-  // 2. Query matching pool
   let path = 'books?select=*&order=created_at.desc';
-  if (excludedIds.length > 0) {
-    path += `&id=not.in.(${excludedIds.join(',')})`;
-  }
+  if (excludedIds.length > 0) path += `&id=not.in.(${excludedIds.join(',')})`;
 
-  const books = await supabaseRequest(path);
-  return books || [];
+  return await supabaseRequest(path) || [];
 }
 
-/**
- * Save a new user swipe response into the cloud table.
- */
 export async function apiLogSwipe(username, bookId, direction) {
   await supabaseRequest('swipes', {
     method: 'POST',
@@ -56,54 +69,41 @@ export async function apiLogSwipe(username, bookId, direction) {
   });
 }
 
-/**
- * Insert a brand new book into the shared project collection.
- */
 export async function apiAddBook(title, author, username) {
+  // Query Google Books metadata before saving to database
+  const metadata = await fetchGoogleBookMetadata(title, author);
+
   const data = await supabaseRequest('books', {
     method: 'POST',
-    body: JSON.stringify({ title, author, added_by: username })
+    body: JSON.stringify({ 
+      title, 
+      author: metadata.author, 
+      added_by: username,
+      cover_url: metadata.cover_url,
+      description: metadata.description,
+      rating: metadata.rating
+    })
   });
-  return { data, error: data === null ? { message: "Failed to post book record to cloud server." } : null };
+  return { data, error: data === null ? { message: "Failed to post book" } : null };
 }
 
-/**
- * Pull all books and swipes from the cloud to calculate a group preference leaderboard.
- */
 export async function apiGetMatches() {
   const books = await supabaseRequest('books?select=*');
   const swipes = await supabaseRequest('swipes?direction=eq.right&select=book_id,user_id');
-  
-  if (!books || !Array.isArray(books) || !swipes || !Array.isArray(swipes)) {
-    return [];
-  }
+  if (!books || !swipes) return [];
 
-  // Count unique votes for each book ID
   const matchCounts = {};
   swipes.forEach(s => {
     const bId = String(s.book_id);
-    if (!matchCounts[bId]) {
-      matchCounts[bId] = { count: 0, voters: [] };
-    }
-    const cleanUser = String(s.user_id).trim();
-    if (!matchCounts[bId].voters.includes(cleanUser)) {
+    if (!matchCounts[bId]) matchCounts[bId] = { count: 0, voters: [] };
+    if (!matchCounts[bId].voters.includes(String(s.user_id).trim())) {
       matchCounts[bId].count += 1;
-      matchCounts[bId].voters.push(cleanUser);
+      matchCounts[bId].voters.push(String(s.user_id).trim());
     }
   });
 
-  // Combine the mapped stats back into the book structures
-  const leaderboard = books.map(book => {
-    const data = matchCounts[String(book.id)] || { count: 0, voters: [] };
-    return {
-      ...book,
-      voteCount: data.count,
-      voters: data.voters
-    };
-  });
-
-  // Filter out anything with less than 1 vote and sort from highest to lowest
-  return leaderboard
-    .filter(book => book.voteCount >= 1)
-    .sort((a, b) => b.voteCount - a.voteCount);
+  return books.map(book => ({
+    ...book,
+    voteCount: matchCounts[String(book.id)]?.count || 0
+  })).filter(b => b.voteCount >= 1).sort((a, b) => b.voteCount - a.voteCount);
 }
