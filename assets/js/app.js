@@ -1,7 +1,15 @@
+// Import your database API helpers directly from your module file
+import { apiGetUnswipedBooks, apiLogSwipe, apiAddBook } from './db.js';
+
 let currentUser = localStorage.getItem('swiper_username') || '';
 let bookQueue = [];
 
-// App Startup Bootstrap Routing
+// Expose these layout interactions to HTML inline onclick attributes
+window.saveUsername = saveUsername;
+window.handleManualSwipe = handleManualSwipe;
+window.toggleModal = toggleModal;
+window.submitBook = submitBook;
+
 if (currentUser) {
   document.getElementById('setup-screen').classList.add('hidden');
   initApp();
@@ -17,16 +25,13 @@ function saveUsername() {
 }
 
 function initApp() {
-  // Ensure the database client is generated safely
-  initSupabaseClient(); 
-  
+  const supabase = window.supabase;
   document.getElementById('user-display').innerText = `Swiping as: ${currentUser}`;
   refreshDeck();
   
-  // Connect a websocket hook to capture third-party data entries in real-time
+  // Realtime hook sync
   supabase
     .channel('schema-db-changes')
-// ... keep the rest of your initApp() function exactly the same ...
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'books' }, payload => {
       if (payload.new.added_by !== currentUser) {
         refreshDeck();
