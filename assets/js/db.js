@@ -10,7 +10,8 @@ let supabase;
  */
 function initSupabaseClient() {
   if (!supabase) {
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Change 'window.supabase.createClient' to just 'supabase.createClient'
+    supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   }
 }
 
