@@ -12,16 +12,16 @@
   <div id="setup-screen" class="modal-overlay" style="background-color: #1c1917;">
     <div style="text-align: center; color: #f5f4f0; width: 100%; max-width: 320px;">
       <h1 class="font-serif" style="font-size: 36px; font-style: italic; margin-bottom: 12px;">the book pool.</h1>
-      <p style="color: #a8a29e; font-size: 12px; font-weight: 300; letter-spacing: 0.05em; margin-bottom: 32px;">Enter your reader signature to join your club's stack.</p>
+      <p style="color: #a8a29e; font-size: 12px; font-weight: 300; letter-spacing: 0.05em; margin-bottom: 32px;">Enter your reader signature to join Overbooked's stack.</p>
       <input type="text" id="username-input" placeholder="Your Name" class="modal-input" style="background: #2c2724; border-color: #44403c; color: #ffffff; text-align: center; margin-bottom: 16px;">
-      <button onclick="saveUsername()" class="btn-primary" style="background: #f5f4f0; color: #1c1917;">Enter Lounge</button>
+      <button onclick="saveUsername()" class="btn-primary" style="background: #f5f4f0; color: #1c1917;">Enter Overbooked</button>
     </div>
   </div>
 
   <!-- Header -->
   <header>
     <div>
-      <h2 class="font-serif" style="font-style: italic;">The Reading Stack</h2>
+      <h2 class="font-serif" style="font-style: italic;">Overbooked's TBR 📚</h2>
       <p id="user-display"></p>
     </div>
     <button onclick="toggleModal(true)" class="btn-outline">+ Add Title</button>
@@ -33,7 +33,7 @@
     <div id="empty-state" class="empty-box hidden">
       <div style="font-size: 24px; margin-bottom: 8px; color: #a8a29e;">✨</div>
       <h3 class="font-serif" style="font-size: 20px; font-style: italic;">End of the Chapter</h3>
-      <p style="font-size: 11px; color: #78716c; margin-top: 4px; font-weight: 300;">Here is where your group stands on current choices:</p>
+      <p style="font-size: 11px; color: #78716c; margin-top: 4px; font-weight: 300;">Here is where we stands on current choices:</p>
       
       <!-- Leaderboard injection point -->
       <div id="end-matches-list" class="leaderboard-container"></div>
@@ -53,7 +53,7 @@
   <!-- Submission Form Popover Dialogue -->
   <div id="add-modal" class="modal-overlay hidden">
     <div class="modal-content">
-      <h3 class="font-serif" style="font-size: 18px; font-style: italic; margin-bottom: 14px; color: #1c1917;">Propose to Stack</h3>
+      <h3 class="font-serif" style="font-size: 18px; font-style: italic; margin-bottom: 14px; color: #1c1917;">Propose a book</h3>
       <div>
         <input type="text" id="book-title" placeholder="Title (Required)" class="modal-input">
         <input type="text" id="book-author" placeholder="Author" class="modal-input">
