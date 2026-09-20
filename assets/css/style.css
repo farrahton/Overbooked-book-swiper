@@ -87,18 +87,38 @@ header p {
   width: 100%;
 }
 
-/* FLUID DECK AREA: Scales automatically relative to window heights */
+/* FLUID DECK AREA: Handles the card stack container bounds */
 main {
   position: relative;
   width: 100%;
   max-width: 340px;
-  height: 52vh; /* Uses view height percentage to prevent mini screens from clipping */
+  height: 52vh;
   margin-top: auto;
   margin-bottom: auto;
   display: flex;
   align-items: center;
   justify-content: center;
 }
+
+/* Empty State / Leaderboard Screen */
+.empty-box {
+  width: 100%;
+  max-width: 320px;
+  background: #ffffff;
+  border: 1px solid #e7e5e4;
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 4px 20px -2px rgba(44, 39, 36, 0.06);
+  
+  /* FIXED: Absolute alignment overrides to lock it into the center of the viewport */
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* Pulls it perfectly centered regardless of font heights */
+  margin: 0;
+}
+
 
 /* The Responsive Swipe Cards */
 .book-card {
@@ -132,22 +152,6 @@ main {
   letter-spacing: 0.08em;
   color: #78716c;
 }
-
-/* Empty State / Leaderboard Screen */
-.empty-box {
-  width: 100%;
-  max-width: 320px;
-  background: #ffffff;
-  border: 1px solid #e7e5e4;
-  border-radius: 16px;
-  padding: 24px;
-  text-align: center;
-  box-shadow: 0 4px 20px -2px rgba(44, 39, 36, 0.06);
-  
-  /* FIXED: Centers the box mathematically inside the parent element framework */
-  margin: 0 auto; 
-}
-
 
 .leaderboard-container {
   margin-top: 16px;
