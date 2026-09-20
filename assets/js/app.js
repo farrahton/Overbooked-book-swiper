@@ -154,14 +154,24 @@ function toggleModal(show) {
 async function submitBook() {
   const title = document.getElementById('book-title').value.trim();
   const author = document.getElementById('book-author').value.trim();
+  
+  // Capture the manual string inputs
+  const manualCover = document.getElementById('book-cover-manual').value.trim();
+  const manualDesc = document.getElementById('book-description-manual').value.trim();
 
   if (!title) return alert("Title is required!");
 
-  const { error } = await apiAddBook(title, author, currentUser);
+  // Pass parameters downwards into your updated db.js file pipeline
+  const { error } = await apiAddBook(title, author, manualCover, manualDesc, currentUser);
   if (error) return alert("Error adding book: " + error.message);
 
+  // Clean form element structures
   document.getElementById('book-title').value = '';
   document.getElementById('book-author').value = '';
+  document.getElementById('book-cover-manual').value = '';
+  document.getElementById('book-description-manual').value = '';
+  
   toggleModal(false);
   refreshDeck();
 }
+

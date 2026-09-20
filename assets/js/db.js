@@ -69,23 +69,32 @@ export async function apiLogSwipe(username, bookId, direction) {
   });
 }
 
-export async function apiAddBook(title, author, username) {
-  // Query Google Books metadata before saving to database
+/**
+ * Insert a brand new book with mixed automated/manual overrides into the repository dataset.
+ */
+export async function apiAddBook(title, author, manualCover, manualDesc, username) {
+  // 1. Fetch automatic metadata as the initial baseline profile
   const metadata = await fetchGoogleBookMetadata(title, author);
+
+  // 2. Resolve Overrides: Prioritize manual user strings over automatic parameters
+  const finalAuthor = author.trim() || metadata.author;
+  const finalCover = manualCover.trim() || metadata.cover_url;
+  const finalDesc = manualDesc.trim() || metadata.description;
 
   const data = await supabaseRequest('books', {
     method: 'POST',
     body: JSON.stringify({ 
-      title, 
-      author: metadata.author, 
+      title: title.trim(), 
+      author: finalAuthor, 
       added_by: username,
-      cover_url: metadata.cover_url,
-      description: metadata.description,
-      rating: metadata.rating
+      cover_url: finalCover,
+      description: finalDesc,
+      rating: metadata.rating // Google rating falls back normally
     })
   });
-  return { data, error: data === null ? { message: "Failed to post book" } : null };
+  return { data, error: data === null ? { message: "Failed to post book record to cloud server." } : null };
 }
+
 
 export async function apiGetMatches() {
   const books = await supabaseRequest('books?select=*');
