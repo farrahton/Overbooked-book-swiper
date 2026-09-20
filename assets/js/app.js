@@ -1,10 +1,9 @@
-// Import your database API helpers directly from your module file
 import { apiGetUnswipedBooks, apiLogSwipe, apiAddBook } from './db.js';
 
 let currentUser = localStorage.getItem('swiper_username') || '';
 let bookQueue = [];
 
-// Expose these layout interactions to HTML inline onclick attributes
+// Expose internal lifecycle methods to the HTML template layer explicitly
 window.saveUsername = saveUsername;
 window.handleManualSwipe = handleManualSwipe;
 window.toggleModal = toggleModal;
@@ -25,19 +24,13 @@ function saveUsername() {
 }
 
 function initApp() {
-  const supabase = window.supabase;
   document.getElementById('user-display').innerText = `Swiping as: ${currentUser}`;
   refreshDeck();
   
-  // Realtime hook sync
-  supabase
-    .channel('schema-db-changes')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'books' }, payload => {
-      if (payload.new.added_by !== currentUser) {
-        refreshDeck();
-      }
-    })
-    .subscribe();
+  // High-reliability background sync: Check for new group additions every 10 seconds
+  setInterval(() => {
+    refreshDeck();
+  }, 10000);
 }
 
 async function refreshDeck() {
@@ -132,7 +125,7 @@ async function submitBook() {
   if (!title) return alert("Title is required!");
 
   const { error } = await apiAddBook(title, author, currentUser);
-  if (error) return alert("Write operational error: " + error.message);
+  if (error) return alert("Error adding book: " + error.message);
 
   document.getElementById('book-title').value = '';
   document.getElementById('book-author').value = '';

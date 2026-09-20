@@ -1,4 +1,4 @@
-/* Prevent text highlight and browser blue boxes during repetitive mobile gestures */
+/* Prevent text highlight and browser blue boxes during touch gestures */
 .no-select {
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -6,7 +6,7 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Ensure smooth card transformations during drag gestures */
+/* Disables animations instantly during user touch actions to prevent visual lag */
 .card-drag-active {
   transition: none !important;
 }

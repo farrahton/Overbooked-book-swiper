@@ -1,54 +1,68 @@
-// Import Supabase directly via a secure unpkg mirror to bypass CDN blocks
-import { createClient } from 'https://unpkg.com';
-
 // --- CONFIGURATION ---
 const SUPABASE_URL = "https://hixflcifimnsutwzevim.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_NxOlmZjO9B-EJnb6xtckvA_Ak129OON";
 
-// Initialize and bind client to the window scope for app.js
-window.supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const supabase = window.supabase;
+/**
+ * Base communication function executing direct REST HTTP fetch queries natively.
+ */
+async function supabaseRequest(path, options = {}) {
+  const url = `${SUPABASE_URL}/rest/v1/${path}`;
+  const headers = {
+    "apikey": SUPABASE_ANON_KEY,
+    "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+    "Content-Type": "application/json",
+    ...options.headers
+  };
+  
+  try {
+    const response = await fetch(url, { ...options, headers });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Database error Response: ${response.status} - ${errorText}`);
+    }
+    if (response.status === 204) return [];
+    return await response.json();
+  } catch (err) {
+    console.error("Supabase API Connection Error:", err);
+    return null;
+  }
+}
 
 /**
- * Fetch books from Supabase that the specific current user hasn't swiped on yet.
+ * Fetch books that the user has not swiped on yet.
  */
 export async function apiGetUnswipedBooks(username) {
-  const { data: swipedBooks } = await supabase
-    .from('swipes')
-    .select('book_id')
-    .eq('user_id', username);
+  // 1. Fetch IDs of books this user already swiped on
+  const swipedData = await supabaseRequest(`swipes?user_id=eq.${encodeURIComponent(username)}&select=book_id`);
+  const excludedIds = swipedData ? swipedData.map(s => s.book_id) : [];
 
-  const excludedIds = swipedBooks ? swipedBooks.map(s => s.book_id) : [];
-
-  let query = supabase.from('books').select('*').order('created_at', { ascending: false });
+  // 2. Query matching pool
+  let path = 'books?select=*&order=created_at.desc';
   if (excludedIds.length > 0) {
-    query = query.not('id', 'in', `(${excludedIds.join(',')})`);
+    path += `&id=not.in.(${excludedIds.join(',')})`;
   }
 
-  const { data, error } = await query;
-  if (error) {
-    console.error("Database fetch exception:", error);
-    return [];
-  }
-  return data || [];
+  const books = await supabaseRequest(path);
+  return books || [];
 }
 
 /**
- * Log a swipe operation into the remote cloud datastore.
+ * Save a new user swipe response into the cloud table.
  */
 export async function apiLogSwipe(username, bookId, direction) {
-  const { error } = await supabase
-    .from('swipes')
-    .insert([{ user_id: username, book_id: bookId, direction }]);
-  if (error) console.error("Database logging exception:", error);
+  await supabaseRequest('swipes', {
+    method: 'POST',
+    body: JSON.stringify({ user_id: username, book_id: bookId, direction })
+  });
 }
 
 /**
- * Write a new book entity card into the schema pipeline.
+ * Insert a brand new book into the shared project collection.
  */
 export async function apiAddBook(title, author, username) {
-  const { data, error } = await supabase
-    .from('books')
-    .insert([{ title, author, added_by: username }]);
-  return { data, error };
+  const data = await supabaseRequest('books', {
+    method: 'POST',
+    body: JSON.stringify({ title, author, added_by: username })
+  });
+  return { data, error: data === null ? { message: "Failed to post book record to cloud server." } : null };
 }

@@ -4,24 +4,22 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Group Book Swiper</title>
-  <!-- Tailwind CSS Stylesheet Client CDN -->
+  <!-- Tailwind CSS Engine -->
   <script src="https://tailwindcss.com"></script>
-  <!-- Supabase CDN Client SDK -->
-  <script src="https://jsdelivr.net"></script>
-  <!-- Custom Modular Stylesheet Module -->
+  <!-- Custom CSS Layer -->
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body class="bg-slate-100 font-sans min-h-screen flex flex-col items-center justify-between p-4 no-select">
 
-  <!-- Setup Screen / Username Prompt Layer -->
+  
   <div id="setup-screen" class="fixed inset-0 bg-slate-900 flex flex-col items-center justify-center p-6 z-50 text-white">
     <h1 class="text-3xl font-bold mb-4">📚 Book Swiper</h1>
-    <p class="text-slate-400 mb-6 text-center max-w-sm">Enter your name so the app knows who is swiping and adding books.</p>
+    <p class="text-slate-400 mb-6 text-center max-w-sm">Enter your name so the app tracks who is swiping and adding books.</p>
     <input type="text" id="username-input" placeholder="Your Name" class="w-full max-w-xs px-4 py-2 rounded bg-slate-800 border border-slate-700 text-white text-center focus:outline-none focus:border-indigo-500 mb-4">
     <button onclick="saveUsername()" class="w-full max-w-xs bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded font-semibold transition">Join Pool</button>
   </div>
 
-  <!-- Application Header -->
+  <!-- Header Section -->
   <header class="w-full max-w-md flex justify-between items-center py-2 border-b border-slate-200">
     <div>
       <h2 class="text-xl font-bold text-slate-800">Book Swipe Pool</h2>
@@ -39,7 +37,7 @@
     <div id="card-container" class="relative w-72 h-96 flex items-center justify-center"></div>
   </main>
 
-  <!-- Manual Interaction Trigger Trays -->
+  <!-- Manual Swipe Triggers -->
   <footer class="w-full max-w-md flex justify-around items-center py-4">
     <button onclick="handleManualSwipe('left')" class="bg-red-100 hover:bg-red-200 text-red-600 p-4 rounded-full shadow-lg transition">
       ❌ Left (Skip)
@@ -64,7 +62,8 @@
     </div>
   </div>
 
-   <!-- JavaScript Project Modules -->
-   <script src="assets/js/app.js" type="module"></script>
+  <!-- Native JavaScript Modules -->
+  <script src="assets/js/db.js" type="module"></script>
+  <script src="assets/js/app.js" type="module"></script>
 </body>
 </html>
