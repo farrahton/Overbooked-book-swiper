@@ -60,7 +60,7 @@ async function renderDeck() {
       item.className = "leaderboard-row";
       item.innerHTML = `
         <div style="min-width: 0; flex: 1; padding-right: 12px; display: flex; gap: 8px; align-items: center;">
-          ${book.cover_url ? `<img src="\${book.cover_url}" style="width: 24px; h-auto; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.15);">` : ''}
+          ${book.cover_url ? `<img src="\${book.cover_url}" style="width: 24px; height: auto; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.15);">` : ''}
           <div style="min-width: 0; flex: 1;">
             <h4 class="font-serif" style="font-size: 13px; font-weight: 500; color: #1c1917; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${book.title}</h4>
             <p style="font-size: 9px; text-transform: uppercase; color: #a8a29e; letter-spacing: 0.03em; margin-top: 1px;">${book.author || 'Unknown'}</p>
@@ -78,26 +78,22 @@ async function renderDeck() {
   const topBook = bookQueue[bookQueue.length - 1];
   const card = document.createElement('div');
   card.className = "book-card";
-  // Increase sizing slightly to contain the summary fields
   card.style.height = "100%";
   card.id = `card-${topBook.id}`;
   
-  // Format rating string if available
   const starRating = topBook.rating ? `⭐ ${Number(topBook.rating).toFixed(1)} / 5` : '';
 
+  // FIXED: The bottom .card-footer layer is removed completely, leaving a clean editorial frame
   card.innerHTML = `
-    <div style="text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; overflow-y: auto; max-height: 80%;">
+    <div style="text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; overflow-y: auto; max-height: 100%; width: 100%;">
       ${topBook.cover_url ? `<img src="\${topBook.cover_url}" style="width: 90px; height: 135px; object-fit: cover; border-radius: 6px; box-shadow: 0 4px 12px rgba(44,39,36,0.15); margin-bottom: 4px;">` : '<div class="card-quote-mark font-serif">“</div>'}
       
-      <div style="padding: 0 4px;">
+      <div style="padding: 0 4px; width: 100%;">
         <h3 class="font-serif card-title" style="font-size: 20px; margin-bottom: 4px; line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden;">${topBook.title}</h3>
         <p class="card-author" style="font-size: 11px; margin-bottom: 4px;">${topBook.author || 'Unknown Author'}</p>
         ${starRating ? `<p style="font-size: 10px; color: #ca8a04; font-weight: 600; letter-spacing: 0.02em; margin-bottom: 8px;">\${starRating}</p>` : ''}
-        <p style="font-size: 11px; color: #57534e; text-align: justify; line-height: 1.5; font-weight: 300; display: -webkit-box; -webkit-box-orient: vertical; line-clamp: 4; overflow: hidden; margin-top: 4px;">${topBook.description || 'No summary available.'}</p>
+        <p style="font-size: 11px; color: #57534e; text-align: justify; line-height: 1.5; font-weight: 300; display: -webkit-box; -webkit-box-orient: vertical; line-clamp: 5; overflow: hidden; margin-top: 4px;">${topBook.description || 'No summary available.'}</p>
       </div>
-    </div>
-    <div class="card-footer" style="margin-top: auto;">
-      Cataloged by: ${topBook.added_by}
     </div>
   `;
 
