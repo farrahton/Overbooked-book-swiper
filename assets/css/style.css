@@ -87,6 +87,20 @@ header p {
   width: 100%;
 }
 
+.btn-cancel {
+  background-color: #f7f6f5;
+  color:#2c2724;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 12px;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  width: 100%;
+}
+
 /* FLUID DECK AREA: Handles the card stack container bounds */
 main {
   position: relative;
