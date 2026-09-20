@@ -1,0 +1,12 @@
+/* Prevent text highlight and browser blue boxes during repetitive mobile gestures */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Ensure smooth card transformations during drag gestures */
+.card-drag-active {
+  transition: none !important;
+}
