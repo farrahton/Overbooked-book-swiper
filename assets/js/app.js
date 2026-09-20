@@ -59,7 +59,7 @@ async function renderDeck() {
       const item = document.createElement('div');
       item.className = "leaderboard-row";
       
-      // FIXED: Removed the escaped backslash so vanilla JS reads the template token natively
+      // FIXED: Completely clean template variables (No backslashes)
       item.innerHTML = `
         <div style="min-width: 0; flex: 1; padding-right: 12px; display: flex; gap: 8px; align-items: center;">
           ${book.cover_url ? `<img src="\${book.cover_url}" style="width: 24px; height: auto; border-radius: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.15);">` : ''}
@@ -85,7 +85,7 @@ async function renderDeck() {
   
   const starRating = topBook.rating ? `⭐ ${Number(topBook.rating).toFixed(1)} / 5` : '';
 
-  // FIXED: Removed the escaped backslashes from the active card layout strings
+  // FIXED: Completely clean template variables (No backslashes)
   card.innerHTML = `
     <div style="text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; overflow-y: auto; max-height: 100%; width: 100%;">
       ${topBook.cover_url ? `<img src="\${topBook.cover_url}" style="width: 90px; height: 135px; object-fit: cover; border-radius: 6px; box-shadow: 0 4px 12px rgba(44,39,36,0.15); margin-bottom: 4px;">` : '<div class="card-quote-mark font-serif">“</div>'}
@@ -157,17 +157,14 @@ async function submitBook() {
   const title = document.getElementById('book-title').value.trim();
   const author = document.getElementById('book-author').value.trim();
   
-  // Capture the manual string inputs
   const manualCover = document.getElementById('book-cover-manual').value.trim();
   const manualDesc = document.getElementById('book-description-manual').value.trim();
 
   if (!title) return alert("Title is required!");
 
-  // Pass parameters downwards into your updated db.js file pipeline
   const { error } = await apiAddBook(title, author, manualCover, manualDesc, currentUser);
   if (error) return alert("Error adding book: " + error.message);
 
-  // Clean form element structures
   document.getElementById('book-title').value = '';
   document.getElementById('book-author').value = '';
   document.getElementById('book-cover-manual').value = '';
@@ -176,4 +173,3 @@ async function submitBook() {
   toggleModal(false);
   refreshDeck();
 }
-
