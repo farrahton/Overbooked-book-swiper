@@ -164,51 +164,120 @@ async function renderDeck() {
   container.appendChild(card);
 }
 
+// Replace everything in your app.js file FROM 'function setupSwipeGestures' downwards:
 
 function setupSwipeGestures(el, bookId) {
   let startX = 0;
+  let startY = 0;
   let currentX = 0;
-  const swipeThreshold = 100;
+  let currentY = 0;
+  let isDragging = false;
+  
+  const swipeThreshold = 100; // Pixels needed to trigger an intentional swipe out
 
+  // Create and append the dynamic action indicators into this specific card layer
+  const keepIndicator = document.createElement('div');
+  keepIndicator.className = "swipe-indicator indicator-keep";
+  keepIndicator.innerText = "❤️ KEEP";
+
+  const passIndicator = document.createElement('div');
+  passIndicator.className = "swipe-indicator indicator-pass";
+  passIndicator.innerText = "❌ PASS";
+
+  el.appendChild(keepIndicator);
+  el.appendChild(passIndicator);
+
+  // START TOUCH
   el.addEventListener('touchstart', e => { 
-    startX = e.touches.clientX; 
+    startX = e.touches[0].clientX; 
+    startY = e.touches[0].clientY;
+    isDragging = true;
     el.classList.add('card-drag-active');
-  });
+  }, { passive: true });
 
+  // MOVING FINGER
   el.addEventListener('touchmove', e => {
-    currentX = e.touches.clientX;
+    if (!isDragging) return;
+    
+    currentX = e.touches[0].clientX;
+    currentY = e.touches[0].clientY;
+    
     const diffX = currentX - startX;
-    el.style.transform = `translateX(${diffX}px) rotate(${diffX / 15}deg)`;
-  });
-
-  el.addEventListener('touchend', () => {
-    el.classList.remove('card-drag-active');
-    const diffX = currentX - startX;
-    if (Math.abs(diffX) > swipeThreshold) {
-      executeSwipe(bookId, diffX > 0 ? 'right' : 'left', el);
+    const diffY = currentY - startY; // Track vertical drift for a natural feel
+    
+    // Calculate tilt rotation angle based on drag width distance
+    const rotation = diffX / 15;
+    el.style.transform = `translate(${diffX}px, ${diffY}px) rotate(${rotation}deg)`;
+    
+    // Fade the heart or cross in smoothly based on how far the user has dragged
+    if (diffX > 10) {
+      keepIndicator.style.opacity = Math.min(diffX / swipeThreshold, 1);
+      passIndicator.style.opacity = 0;
+    } else if (diffX < -10) {
+      passIndicator.style.opacity = Math.min(Math.abs(diffX) / swipeThreshold, 1);
+      keepIndicator.style.opacity = 0;
     } else {
-      el.style.transform = 'translateX(0px) rotate(0deg)';
+      keepIndicator.style.opacity = 0;
+      passIndicator.style.opacity = 0;
     }
-    startX = currentX = 0;
+  }, { passive: true });
+
+  // RELEASING TOUCH
+  el.addEventListener('touchend', () => {
+    if (!isDragging) return;
+    isDragging = false;
+    el.classList.remove('card-drag-active');
+    
+    const diffX = currentX - startX;
+    
+    // Check if the drag distance passed our threshold trigger line
+    if (Math.abs(diffX) > swipeThreshold && currentX !== 0) {
+      const direction = diffX > 0 ? 'right' : 'left';
+      executeSwipe(bookId, direction, el);
+    } else {
+      // Snap card back to dead center if they let go too early
+      el.style.transform = 'translate(0px, 0px) rotate(0deg)';
+      keepIndicator.style.opacity = 0;
+      passIndicator.style.opacity = 0;
+    }
+    
+    // Reset track configurations
+    startX = startY = currentX = currentY = 0;
   });
 }
 
 function handleManualSwipe(direction) {
   if (bookQueue.length === 0) return;
   const topBook = bookQueue[bookQueue.length - 1];
-  executeSwipe(topBook.id, direction, document.getElementById(`card-${topBook.id}`));
+  const cardEl = document.getElementById(`card-${topBook.id}`);
+  
+  // Flash indicators instantly for the button clicks before throwing the card away
+  if (cardEl) {
+    const indicator = cardEl.querySelector(direction === 'right' ? '.indicator-keep' : '.indicator-pass');
+    if (indicator) indicator.style.opacity = '1';
+  }
+  
+  executeSwipe(topBook.id, direction, cardEl);
 }
 
 async function executeSwipe(bookId, direction, cardEl) {
   if (cardEl) {
-    const flyX = direction === 'right' ? 500 : -500;
-    cardEl.style.transform = `translateX(${flyX}px) rotate(${flyX / 10}deg)`;
+    // Throw velocity coordinates: flies horizontally off the screen boundary margins
+    const flyX = direction === 'right' ? window.innerWidth + 200 : -(window.innerWidth + 200);
+    cardEl.style.transform = `translate(${flyX}px, 0px) rotate(${flyX / 12}deg)`;
     cardEl.style.opacity = '0';
   }
 
+  // Save selection parameters directly into Supabase
   await apiLogSwipe(currentUser, bookId, direction);
+  
+  // Slice card out of local browser running queue array parameters
   bookQueue.pop();
-  setTimeout(() => { renderDeck(); }, 200);
+  
+  // Wait for the exit animation to finish before painting the next card underneath
+  setTimeout(() => { 
+    renderDeck(); 
+  }, 250);
 }
 
 function toggleModal(show) {
