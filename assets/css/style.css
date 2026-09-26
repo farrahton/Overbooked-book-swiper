@@ -6,14 +6,13 @@
   padding: 0;
 }
 
-html,
-body {
+html {
   width: 100%;
-  height: 100%;
+  min-height: 100%;
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
   background-color: #fdfbf7;
   color: #2c2724;
 
@@ -23,12 +22,15 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
 
   padding: 16px 20px;
 
-  /* Prevent the entire page from scrolling */
-  overflow: hidden;
+  /*
+   * Allow the page to become taller when there are
+   * lots of books in the End of Chapter card.
+   */
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .font-serif {
@@ -39,7 +41,6 @@ body {
   -webkit-user-select: none;
   -moz-user-select: none;
   user-select: none;
-
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -130,7 +131,7 @@ header p {
 
 
 /* =========================================================
-   MAIN CARD AREA
+   MAIN
    ========================================================= */
 
 main {
@@ -139,15 +140,26 @@ main {
   width: 100%;
   max-width: 340px;
 
-  height: 52vh;
-  min-height: 0;
+  /*
+   * Normal minimum height for the book cards.
+   * Unlike before, this is NOT a fixed-height window.
+   */
+  min-height: 52vh;
 
-  margin-top: auto;
-  margin-bottom: auto;
+  /*
+   * Allow the main area to grow when the End of Chapter
+   * leaderboard contains many books.
+   */
+  height: auto;
+
+  margin-top: 20px;
+  margin-bottom: 20px;
 
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+
+  flex-shrink: 0;
 }
 
 
@@ -156,18 +168,20 @@ main {
    ========================================================= */
 
 .empty-box {
-  position: absolute;
-
-  top: 50%;
-  left: 50%;
-
-  transform: translate(-50%, -50%);
+  /*
+   * No absolute positioning.
+   * The card participates normally in the page layout.
+   */
+  position: relative;
 
   width: 100%;
   max-width: 320px;
 
-  height: 100%;
-  max-height: 100%;
+  /*
+   * Let the card become as tall as necessary.
+   */
+  height: auto;
+  min-height: 52vh;
 
   background: #ffffff;
 
@@ -182,102 +196,52 @@ main {
     0 4px 20px -2px rgba(44, 39, 36, 0.06);
 
   /*
-   * IMPORTANT:
-   * The card itself does not scroll.
-   * Only the book list inside it scrolls.
+   * Nothing inside the card is clipped.
    */
-  overflow: hidden;
+  overflow: visible;
 
   display: flex;
   flex-direction: column;
+
+  flex-shrink: 0;
 }
 
 
 /* =========================================================
-   END OF CHAPTER BOOK LIST
+   LEADERBOARD
    ========================================================= */
 
 .leaderboard-container {
-  /*
-   * This is the actual scrolling viewport.
-   */
   width: 100%;
-
-  height: 0;
-  flex: 1 1 auto;
-
-  min-height: 0;
 
   margin-top: 16px;
 
+  /*
+   * Normal document flow.
+   * The list grows as long as it needs to.
+   */
   display: flex;
   flex-direction: column;
 
   gap: 8px;
 
   /*
-   * Force vertical scrolling.
+   * IMPORTANT:
+   * No max-height.
+   * No overflow.
+   * No scrolling.
    */
-  overflow-y: scroll;
-  overflow-x: hidden;
+  height: auto;
+  max-height: none;
 
-  /*
-   * Native smooth scrolling on iOS.
-   */
-  -webkit-overflow-scrolling: touch;
+  overflow: visible;
 
-  /*
-   * Tell the browser this area handles vertical gestures.
-   */
-  touch-action: pan-y;
-
-  /*
-   * Prevent scroll chaining to the page.
-   */
-  overscroll-behavior-y: contain;
-
-  /*
-   * Keep scrollbar from sitting directly on content.
-   */
-  padding-right: 5px;
-
-  /*
-   * Don't allow flexbox to collapse this element.
-   */
-  flex-shrink: 1;
-}
-
-
-/* WebKit scrollbar */
-
-.leaderboard-container::-webkit-scrollbar {
-  width: 5px;
-}
-
-.leaderboard-container::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.leaderboard-container::-webkit-scrollbar-thumb {
-  background: #c7c3bf;
-  border-radius: 10px;
-}
-
-.leaderboard-container::-webkit-scrollbar-thumb:hover {
-  background: #a8a29e;
-}
-
-
-/* Firefox */
-
-.leaderboard-container {
-  scrollbar-width: thin;
-  scrollbar-color: #c7c3bf transparent;
+  flex-shrink: 0;
 }
 
 
 /* =========================================================
-   LEADERBOARD ROWS
+   LEADERBOARD ROW
    ========================================================= */
 
 .leaderboard-row {
@@ -299,10 +263,9 @@ main {
   text-align: left;
 
   /*
-   * VERY IMPORTANT:
-   * Rows must not shrink to fit the container.
+   * Never shrink a row.
    */
-  flex: 0 0 auto;
+  flex-shrink: 0;
 
   min-height: 56px;
 }
@@ -360,11 +323,6 @@ main {
     0 2px 6px -1px rgba(44, 39, 36, 0.03);
 
   overflow: hidden;
-
-  /*
-   * The actual book card is horizontal-swipeable.
-   */
-  touch-action: pan-y;
 }
 
 .card-title {
@@ -560,7 +518,7 @@ footer {
 
 
 /* =========================================================
-   SMALL SCREENS
+   MOBILE
    ========================================================= */
 
 @media (max-height: 700px) {
@@ -574,7 +532,9 @@ footer {
   }
 
   main {
-    height: 55vh;
+    min-height: 55vh;
+    margin-top: 15px;
+    margin-bottom: 15px;
   }
 
   .empty-box {
