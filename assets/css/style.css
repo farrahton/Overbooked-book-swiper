@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
 
 * {
   box-sizing: border-box;
@@ -20,9 +20,7 @@ body {
 
   padding: 16px 20px;
 
-  /* Prevent the page itself from scrolling */
   overflow: hidden;
-  overscroll-behavior: none;
 }
 
 .font-serif {
@@ -123,7 +121,7 @@ header p {
 
 
 /* =========================
-   MAIN / CARD AREA
+   MAIN
    ========================= */
 
 main {
@@ -145,21 +143,23 @@ main {
 
 
 /* =========================
-   END OF CHAPTER
+   END OF CHAPTER CARD
    ========================= */
 
 .empty-box {
+  position: absolute;
+
+  top: 0;
+  left: 50%;
+
+  transform: translateX(-50%);
+
   width: 100%;
   max-width: 320px;
-
-  /*
-   * Keep the card inside the available main area.
-   * This is important for mobile screens.
-   */
   height: 100%;
-  max-height: 100%;
 
   background: #ffffff;
+
   border: 1px solid #e7e5e4;
   border-radius: 16px;
 
@@ -171,48 +171,90 @@ main {
     0 4px 20px -2px rgba(44, 39, 36, 0.06);
 
   /*
-   * Position inside main instead of using 50% / translateY.
+   * IMPORTANT:
+   * The card itself does NOT scroll.
+   * The book list inside it does.
    */
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* =========================
+   BOOK LIST SCROLL AREA
+   ========================= */
+
+.leaderboard-container {
+  /*
+   * This is now the actual scrolling area.
+   */
+  flex: 1;
+
+  min-height: 0;
+
+  width: 100%;
+
+  margin-top: 16px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
 
   /*
-   * THE IMPORTANT PART:
-   * The entire end-of-chapter card can scroll vertically.
+   * Vertical scrolling.
    */
   overflow-y: auto;
   overflow-x: hidden;
 
+  /*
+   * Mobile/iPhone scrolling.
+   */
   -webkit-overflow-scrolling: touch;
+
+  /*
+   * Keep the scroll gesture inside this list.
+   */
   overscroll-behavior: contain;
 
   /*
-   * Make scrolling feel natural on mobile.
+   * Make sure the scrollbar has room.
+   */
+  padding-right: 4px;
+
+  /*
+   * Allow vertical touch scrolling.
    */
   touch-action: pan-y;
 }
 
 
-/* =========================
-   LEADERBOARD
-   ========================= */
+/* Optional: nicer scrollbar */
+
+.leaderboard-container::-webkit-scrollbar {
+  width: 4px;
+}
+
+.leaderboard-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.leaderboard-container::-webkit-scrollbar-thumb {
+  background: #d6d3d1;
+  border-radius: 10px;
+}
 
 .leaderboard-container {
-  margin-top: 16px;
-
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-
-  /*
-   * The parent .empty-box handles scrolling now.
-   * Don't create a second nested scrollbar.
-   */
-  max-height: none;
-  overflow: visible;
+  scrollbar-width: thin;
+  scrollbar-color: #d6d3d1 transparent;
 }
+
+
+/* =========================
+   LEADERBOARD ROW
+   ========================= */
 
 .leaderboard-row {
   background: #fafaf9;
@@ -221,33 +263,49 @@ main {
   border-left: 4px solid #881337;
 
   padding: 10px;
+
   border-radius: 8px;
 
   display: flex;
+
   align-items: center;
   justify-content: space-between;
 
   text-align: left;
 
   /*
-   * Prevent rows from shrinking when the list gets long.
+   * VERY IMPORTANT:
+   * Prevent flexbox from shrinking rows.
+   * Without this, the browser can compress the
+   * rows instead of allowing the container to scroll.
    */
-  flex-shrink: 0;
+  flex: 0 0 auto;
+
+  min-height: 56px;
 }
+
+
+/* =========================
+   VOTE BADGE
+   ========================= */
 
 .badge-votes {
   background: #f3f2ee;
+
   border: 1px solid #e7e5e4;
 
   color: #44403c;
 
   font-size: 10px;
+
   font-weight: 600;
 
   padding: 4px 8px;
+
   border-radius: 12px;
 
   white-space: nowrap;
+
   flex-shrink: 0;
 }
 
@@ -284,6 +342,7 @@ main {
 
 .card-title {
   font-size: 18px;
+
   font-weight: 500;
 
   color: #1c1917;
@@ -297,6 +356,7 @@ main {
   font-size: 10px;
 
   text-transform: uppercase;
+
   letter-spacing: 0.08em;
 
   color: #78716c;
@@ -304,7 +364,7 @@ main {
 
 
 /* =========================
-   BOTTOM CONTROLS
+   FOOTER
    ========================= */
 
 footer {
@@ -312,6 +372,7 @@ footer {
   max-width: 360px;
 
   display: flex;
+
   justify-content: center;
   align-items: center;
 
@@ -327,11 +388,13 @@ footer {
 
 .footer-btn {
   background: transparent;
+
   border: none;
 
   font-size: 12px;
 
   text-transform: uppercase;
+
   letter-spacing: 0.08em;
 
   cursor: pointer;
@@ -363,11 +426,13 @@ footer {
 
 .modal-overlay {
   position: fixed;
+
   inset: 0;
 
   background-color: rgba(28, 25, 23, 0.4);
 
   display: flex;
+
   align-items: center;
   justify-content: center;
 
@@ -380,6 +445,7 @@ footer {
   background-color: #fdfbf7;
 
   border: 1px solid #e7e5e4;
+
   border-radius: 12px;
 
   padding: 20px;
@@ -408,7 +474,9 @@ footer {
 
 .modal-actions {
   display: flex;
+
   justify-content: flex-end;
+
   gap: 16px;
 
   margin-top: 16px;
@@ -426,18 +494,18 @@ footer {
 .swipe-indicator {
   position: absolute;
 
-  /*
-   * Keep badges near the top of the card.
-   */
   top: 20px;
 
   font-size: 11px;
+
   font-weight: 600;
 
   text-transform: uppercase;
+
   letter-spacing: 0.1em;
 
   padding: 6px 12px;
+
   border-radius: 6px;
 
   opacity: 0;
@@ -475,10 +543,11 @@ footer {
 
 
 /* =========================
-   MOBILE ADJUSTMENTS
+   SMALL MOBILE SCREENS
    ========================= */
 
 @media (max-height: 700px) {
+
   body {
     padding-top: 10px;
     padding-bottom: 8px;
