@@ -2,7 +2,8 @@ import {
   apiGetUnswipedBooks,
   apiLogSwipe,
   apiAddBook,
-  apiGetMatches
+  apiGetMatches,
+  apiResetSwipes
 } from './db.js';
 
 let currentUser = localStorage.getItem('swiper_username') || '';
@@ -16,6 +17,7 @@ window.saveUsername = saveUsername;
 window.handleManualSwipe = handleManualSwipe;
 window.toggleModal = toggleModal;
 window.submitBook = submitBook;
+window.resetMySwipes = resetMySwipes;
 
 
 // =========================================================
@@ -454,241 +456,8 @@ async function renderDeck() {
   );
 
 
-  // =======================================================
-  // SWIPE GESTURES
-  // =======================================================
-
-  setupSwipeGestures(
-    card,
-    topBook.id
-  );
-
-
   // Add card to page.
   container.appendChild(card);
-}
-
-
-// =========================================================
-// SWIPE GESTURES
-// =========================================================
-
-function setupSwipeGestures(el, bookId) {
-
-  let startX = 0;
-  let startY = 0;
-
-  let currentX = 0;
-  let currentY = 0;
-
-  let isDragging = false;
-
-  const swipeThreshold = 100;
-
-
-  // =======================================================
-  // INDICATORS
-  // =======================================================
-
-  const keepIndicator =
-    document.createElement('div');
-
-  keepIndicator.className =
-    'swipe-indicator indicator-keep';
-
-  keepIndicator.innerText =
-    '❤️ KEEP';
-
-
-  const passIndicator =
-    document.createElement('div');
-
-  passIndicator.className =
-    'swipe-indicator indicator-pass';
-
-  passIndicator.innerText =
-    '❌ PASS';
-
-
-  el.appendChild(
-    keepIndicator
-  );
-
-  el.appendChild(
-    passIndicator
-  );
-
-
-  // =======================================================
-  // TOUCH START
-  // =======================================================
-
-  el.addEventListener(
-    'touchstart',
-    e => {
-
-      startX =
-        e.touches[0].clientX;
-
-      startY =
-        e.touches[0].clientY;
-
-      currentX =
-        startX;
-
-      currentY =
-        startY;
-
-      isDragging = true;
-
-      el.classList.add(
-        'card-drag-active'
-      );
-    },
-    {
-      passive: true
-    }
-  );
-
-
-  // =======================================================
-  // TOUCH MOVE
-  // =======================================================
-
-  el.addEventListener(
-    'touchmove',
-    e => {
-
-      if (!isDragging) return;
-
-      currentX =
-        e.touches[0].clientX;
-
-      currentY =
-        e.touches[0].clientY;
-
-      const diffX =
-        currentX - startX;
-
-      const diffY =
-        currentY - startY;
-
-
-      // Rotation.
-      const rotation =
-        diffX / 15;
-
-
-      el.style.transform =
-        `translate(${diffX}px, ${diffY}px) rotate(${rotation}deg)`;
-
-
-      // Keep indicator.
-      if (diffX > 10) {
-
-        keepIndicator.style.opacity =
-          Math.min(
-            diffX / swipeThreshold,
-            1
-          );
-
-        passIndicator.style.opacity =
-          0;
-
-      }
-
-      // Pass indicator.
-      else if (diffX < -10) {
-
-        passIndicator.style.opacity =
-          Math.min(
-            Math.abs(diffX) /
-              swipeThreshold,
-            1
-          );
-
-        keepIndicator.style.opacity =
-          0;
-
-      }
-
-      // Nothing.
-      else {
-
-        keepIndicator.style.opacity =
-          0;
-
-        passIndicator.style.opacity =
-          0;
-      }
-    },
-    {
-      passive: true
-    }
-  );
-
-
-  // =======================================================
-  // TOUCH END
-  // =======================================================
-
-  el.addEventListener(
-    'touchend',
-    () => {
-
-      if (!isDragging) return;
-
-      isDragging = false;
-
-      el.classList.remove(
-        'card-drag-active'
-      );
-
-
-      const diffX =
-        currentX - startX;
-
-
-      // Execute swipe.
-      if (
-        Math.abs(diffX) >
-          swipeThreshold &&
-        currentX !== 0
-      ) {
-
-        const direction =
-          diffX > 0
-            ? 'right'
-            : 'left';
-
-        executeSwipe(
-          bookId,
-          direction,
-          el
-        );
-
-      } else {
-
-        // Snap back.
-        el.style.transform =
-          'translate(0px, 0px) rotate(0deg)';
-
-        keepIndicator.style.opacity =
-          0;
-
-        passIndicator.style.opacity =
-          0;
-      }
-
-
-      // Reset tracking.
-      startX = 0;
-      startY = 0;
-
-      currentX = 0;
-      currentY = 0;
-    }
-  );
 }
 
 
@@ -884,4 +653,31 @@ async function submitBook() {
 
   // Reload books.
   refreshDeck();
+}
+
+// reset swipes
+
+async function resetMySwipes() {
+  if (!currentUser) {
+    return;
+  }
+
+  const confirmed = confirm(
+    'Reset your reading decisions?\n\nThis will delete all your Pass and Keep choices so you can go through the entire book pool again.'
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  const result = await apiResetSwipes(currentUser);
+
+  if (result.error) {
+    alert('Could not reset your swipes: ' + result.error.message);
+    return;
+  }
+
+  alert('Your swipes have been reset. The book pool starts fresh!');
+
+  await refreshDeck();
 }

@@ -112,3 +112,20 @@ export async function apiGetMatches() {
     voteCount: matchCounts[String(book.id)]?.count || 0
   })).filter(b => b.voteCount >= 1).sort((a, b) => b.voteCount - a.voteCount);
 }
+
+/** delete my swipes feature */
+
+export async function apiResetSwipes(username) {
+  const path = `swipes?user_id=eq.${encodeURIComponent(username)}`;
+
+  const result = await supabaseRequest(path, {
+    method: 'DELETE'
+  });
+
+  return {
+    success: result !== null,
+    error: result === null
+      ? { message: 'Failed to reset your swipes.' }
+      : null
+  };
+}
