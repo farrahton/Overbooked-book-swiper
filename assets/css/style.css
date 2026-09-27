@@ -4,82 +4,96 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  }
+}
 
 body {
-font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
-background-color: #fdfbf7;
-color: #2c2724;
-min-height: 100vh;
+  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  background-color: #fdfbf7;
+  color: #2c2724;
 
-/* Allow the page to grow when the leaderboard gets longer */
-min-height: -webkit-fill-available;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
 
-display: flex;
-flex-direction: column;
-align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 
-padding: 16px 20px;
+  padding: 16px 20px;
 
-/* IMPORTANT:
-Allow vertical scrolling when there are many books */
-overflow-y: auto;
-overflow-x: hidden;
+  /*
+   * Important:
+   * Allows the leaderboard to make the page taller
+   * and lets the user scroll through a long list.
+   */
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .font-serif {
-font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Playfair Display', Georgia, serif;
 }
 
 .no-select {
--webkit-user-select: none;
--moz-user-select: none;
-user-select: none;
--webkit-tap-highlight-color: transparent;
-}
-
-.card-drag-active {
-transition: none !important;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* =========================================================
-HEADER
-========================================================= */
+   HEADER
+   ========================================================= */
 
 header {
-width: 100%;
-max-width: 360px;
+  width: 100%;
+  max-width: 360px;
 
-display: flex;
-justify-content: space-between;
-align-items: flex-end;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
 
-padding-top: 8px;
-padding-bottom: 16px;
+  padding-top: 8px;
+  padding-bottom: 16px;
 
-border-bottom: 1px solid rgba(44, 39, 36, 0.1);
+  border-bottom: 1px solid rgba(44, 39, 36, 0.1);
 
-flex-shrink: 0;
+  flex-shrink: 0;
 }
 
 header h2 {
-font-size: 20px;
-font-weight: 600;
-color: #1c1917;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1c1917;
 }
 
 header p {
-font-size: 10px;
-text-transform: uppercase;
-letter-spacing: 0.05em;
-color: #a8a29e;
-margin-top: 2px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #a8a29e;
+  margin-top: 2px;
 }
+
+/* =========================================================
+   HEADER ACTIONS
+   ========================================================= */
 
 .header-actions {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid #d6d3d1;
+  color: #44403c;
+
+  padding: 6px 12px;
+  border-radius: 20px;
+
+  font-size: 11px;
+  cursor: pointer;
 }
 
 .btn-reset {
@@ -103,362 +117,369 @@ margin-top: 2px;
 }
 
 /* =========================================================
-BUTTONS
-========================================================= */
-
-.btn-outline {
-background: transparent;
-border: 1px solid #d6d3d1;
-color: #44403c;
-
-padding: 6px 12px;
-border-radius: 20px;
-
-font-size: 11px;
-cursor: pointer;
-}
+   PRIMARY / CANCEL BUTTONS
+   ========================================================= */
 
 .btn-primary {
-background-color: #2c2724;
-color: #ffffff;
-border: none;
+  background-color: #2c2724;
+  color: #ffffff;
 
-padding: 12px 24px;
-border-radius: 6px;
+  border: none;
 
-font-size: 12px;
-text-transform: uppercase;
-font-weight: 600;
-letter-spacing: 0.05em;
+  padding: 12px 24px;
+  border-radius: 6px;
 
-cursor: pointer;
-width: 100%;
+  font-size: 12px;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+
+  cursor: pointer;
+  width: 100%;
 }
 
 .btn-cancel {
-background-color: #f7f6f5;
-color: #2c2724;
-border: none;
+  background-color: #f7f6f5;
+  color: #2c2724;
 
-padding: 12px 24px;
-border-radius: 6px;
+  border: none;
 
-font-size: 12px;
-text-transform: uppercase;
-font-weight: 600;
-letter-spacing: 0.05em;
+  padding: 12px 24px;
+  border-radius: 6px;
 
-cursor: pointer;
-width: 100%;
+  font-size: 12px;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+
+  cursor: pointer;
+  width: 100%;
 }
 
 /* =========================================================
-MAIN / DECK AREA
-========================================================= */
+   MAIN / BOOK DECK AREA
+   ========================================================= */
 
 main {
-position: relative;
-width: 100%;
-max-width: 340px;
+  position: relative;
+  width: 100%;
+  max-width: 340px;
 
-/*
+  /*
+   * Keep a defined height because .book-card
+   * uses position: absolute.
+   */
+  height: 52vh;
+  min-height: 360px;
 
-* Previously this was:
-* height: 52vh;
-*
-* That prevented the leaderboard from naturally growing.
-*
-* min-height keeps the normal swipe-card layout roughly the
-* same while allowing the leaderboard to become taller.
-  */
-  min-height: 52vh;
-  height: auto;
+  margin-top: auto;
+  margin-bottom: auto;
 
-margin-top: 20px;
-margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-display: flex;
-align-items: center;
-justify-content: center;
+  flex-shrink: 0;
 }
 
 /* =========================================================
-EMPTY STATE / LEADERBOARD
-========================================================= */
+   EMPTY STATE / LEADERBOARD
+   ========================================================= */
 
 .empty-box {
-width: 100%;
-max-width: 320px;
+  width: 100%;
+  max-width: 320px;
 
-background: #ffffff;
-border: 1px solid #e7e5e4;
-border-radius: 16px;
+  background: #ffffff;
 
-padding: 24px;
+  border: 1px solid #e7e5e4;
+  border-radius: 16px;
 
-text-align: center;
+  padding: 24px;
 
-box-shadow:
-0 4px 20px -2px rgba(44, 39, 36, 0.06);
+  text-align: center;
 
-/*
+  box-shadow:
+    0 4px 20px -2px rgba(44, 39, 36, 0.06);
 
-* IMPORTANT:
-* Remove the old absolute positioning.
-*
-* The box now participates in the normal document layout,
-* which allows it to grow with the leaderboard.
-  */
+  /*
+   * IMPORTANT:
+   * No absolute positioning here.
+   * This lets the box grow naturally.
+   */
   position: relative;
+
   top: auto;
   left: auto;
   transform: none;
 
-/*
-
-* No fixed height.
-* The box grows naturally as more books are added.
-  */
+  height: auto;
   max-height: none;
+
   overflow: visible;
-  }
+}
 
 /* =========================================================
-LEADERBOARD LIST
-========================================================= */
+   LEADERBOARD
+   ========================================================= */
 
 .leaderboard-container {
-margin-top: 16px;
+  margin-top: 16px;
 
-/*
-
-* IMPORTANT:
-* Removed max-height: 240px.
-* Removed overflow-y: auto.
-*
-* The list can now contain as many books as necessary.
-  */
+  /*
+   * No height restriction.
+   * The box grows to contain all books.
+   */
+  height: auto;
   max-height: none;
+
   overflow: visible;
 
-display: flex;
-flex-direction: column;
-gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .leaderboard-row {
-background: #fafaf9;
-border: 1px solid #e7e5e4;
-border-left: 4px solid #881337;
+  background: #fafaf9;
 
-padding: 10px;
-border-radius: 8px;
+  border: 1px solid #e7e5e4;
+  border-left: 4px solid #881337;
 
-display: flex;
-align-items: center;
-justify-content: space-between;
+  padding: 10px;
+  border-radius: 8px;
 
-text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 
-/*
+  text-align: left;
 
-* Prevent long book titles from forcing the row wider
-* than the leaderboard box.
-  */
   width: 100%;
   min-width: 0;
-  }
+}
 
 .badge-votes {
-background: #f3f2ee;
-border: 1px solid #e7e5e4;
-color: #44403c;
+  background: #f3f2ee;
 
-font-size: 10px;
-font-weight: 600;
+  border: 1px solid #e7e5e4;
 
-padding: 4px 8px;
-border-radius: 12px;
+  color: #44403c;
 
-white-space: nowrap;
-flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 600;
+
+  padding: 4px 8px;
+  border-radius: 12px;
+
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* =========================================================
-BOOK CARDS
-========================================================= */
+   BOOK CARDS
+   ========================================================= */
 
 .book-card {
-position: absolute;
+  position: absolute;
 
-top: 0;
-left: 0;
-right: 0;
-bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 
-background: #ffffff;
-border: 1px solid #e7e5e4;
-border-radius: 16px;
+  background: #ffffff;
 
-padding: 20px;
+  border: 1px solid #e7e5e4;
+  border-radius: 16px;
 
-display: flex;
-flex-direction: column;
-justify-content: flex-start;
+  padding: 20px;
 
-box-shadow:
-0 4px 20px -2px rgba(44, 39, 36, 0.06),
-0 2px 6px -1px rgba(44, 39, 36, 0.03);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 
-overflow: hidden;
+  box-shadow:
+    0 4px 20px -2px rgba(44, 39, 36, 0.06),
+    0 2px 6px -1px rgba(44, 39, 36, 0.03);
+
+  /*
+   * The card itself does not move anymore.
+   */
+  transform: none !important;
+
+  overflow: hidden;
 }
 
 .card-title {
-font-size: 18px;
-font-weight: 500;
+  font-size: 18px;
 
-color: #1c1917;
-line-height: 1.3;
+  font-weight: 500;
 
-margin-bottom: 4px;
+  color: #1c1917;
+
+  line-height: 1.3;
+
+  margin-bottom: 4px;
 }
 
 .card-author {
-font-size: 10px;
-text-transform: uppercase;
-letter-spacing: 0.08em;
+  font-size: 10px;
 
-color: #78716c;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+
+  color: #78716c;
 }
 
 /* =========================================================
-BOTTOM CONTROLS
-========================================================= */
+   BOTTOM CONTROLS
+   ========================================================= */
 
 footer {
-width: 100%;
-max-width: 360px;
+  width: 100%;
+  max-width: 360px;
 
-display: flex;
-justify-content: center;
-align-items: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 
-gap: 40px;
+  gap: 40px;
 
-padding-top: 16px;
-padding-bottom: 12px;
+  padding-top: 16px;
+  padding-bottom: 12px;
 
-border-top: 1px solid #f5f4f0;
+  border-top: 1px solid #f5f4f0;
 
-flex-shrink: 0;
+  flex-shrink: 0;
 }
 
 .footer-btn {
-background: transparent;
-border: none;
+  background: transparent;
 
-font-size: 12px;
-text-transform: uppercase;
-letter-spacing: 0.08em;
+  border: none;
 
-cursor: pointer;
-padding: 8px 16px;
+  font-size: 12px;
+
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+
+  cursor: pointer;
+
+  padding: 8px 16px;
 }
 
 .btn-pass {
-color: #a8a29e;
-font-weight: 500;
+  color: #a8a29e;
+  font-weight: 500;
 }
 
 .btn-keep {
-color: #881337;
-font-weight: 600;
+  color: #881337;
+  font-weight: 600;
 }
 
 .divider-line {
-height: 16px;
-width: 1px;
-background-color: #e7e5e4;
+  height: 16px;
+  width: 1px;
+
+  background-color: #e7e5e4;
 }
 
 /* =========================================================
-MODALS
-========================================================= */
+   MODALS
+   ========================================================= */
 
 .modal-overlay {
-position: fixed;
-inset: 0;
+  position: fixed;
+  inset: 0;
 
-background-color: rgba(28, 25, 23, 0.4);
+  background-color: rgba(28, 25, 23, 0.4);
 
-display: flex;
-align-items: center;
-justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-padding: 16px;
+  padding: 16px;
 
-z-index: 100;
+  z-index: 100;
 }
 
 .modal-content {
-background-color: #fdfbf7;
-border: 1px solid #e7e5e4;
-border-radius: 12px;
+  background-color: #fdfbf7;
 
-padding: 20px;
+  border: 1px solid #e7e5e4;
+  border-radius: 12px;
 
-width: 100%;
-max-width: 320px;
+  padding: 20px;
+
+  width: 100%;
+  max-width: 320px;
 }
 
 .modal-input {
-width: 100%;
+  width: 100%;
 
-background: #ffffff;
-border: 1px solid #e7e5e4;
+  background: #ffffff;
 
-padding: 10px;
-border-radius: 6px;
+  border: 1px solid #e7e5e4;
 
-font-size: 14px;
+  padding: 10px;
 
-margin-bottom: 8px;
+  border-radius: 6px;
 
-outline: none;
+  font-size: 14px;
+
+  margin-bottom: 8px;
+
+  outline: none;
 }
 
 .modal-actions {
-display: flex;
-justify-content: flex-end;
+  display: flex;
+  justify-content: flex-end;
 
-gap: 16px;
-margin-top: 16px;
+  gap: 16px;
+
+  margin-top: 16px;
 }
 
 .hidden {
-display: none !important;
+  display: none !important;
 }
-
 
 /* =========================================================
-MOBILE ADJUSTMENTS
-========================================================= */
+   MOBILE
+   ========================================================= */
 
 @media (max-width: 380px) {
-body {
-padding-left: 12px;
-padding-right: 12px;
-}
 
-.empty-box {
-padding: 18px;
-}
+  body {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
 
-.leaderboard-row {
-padding: 8px;
-}
+  .empty-box {
+    padding: 18px;
+  }
 
-footer {
-gap: 28px;
-}
+  .leaderboard-row {
+    padding: 8px;
+  }
+
+  footer {
+    gap: 28px;
+  }
+
+  .header-actions {
+    gap: 4px;
+  }
+
+  .btn-outline {
+    padding: 6px 9px;
+  }
+
+  .btn-reset {
+    padding: 6px 7px;
+  }
 }
