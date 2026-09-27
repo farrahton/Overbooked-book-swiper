@@ -584,62 +584,42 @@ main {
 
 footer {
   width: 100%;
-  max-width: 360px;
-
+  max-width: 340px;
   display: flex;
-
   justify-content: center;
-
   align-items: center;
-
-  gap: 40px;
-
-  padding-top: 16px;
-  padding-bottom: 12px;
-
+  gap: 28px;
+  padding-top: 6px;
+  padding-bottom: 8px;
   border-top: 1px solid #f5f4f0;
-
   flex-shrink: 0;
-
-  background: #fdfbf7;
 }
 
 .footer-btn {
   background: transparent;
-
   border: none;
-
   font-size: 12px;
-
   text-transform: uppercase;
-
   letter-spacing: 0.08em;
-
   cursor: pointer;
-
   padding: 8px 16px;
 }
 
 .btn-pass {
   color: #a8a29e;
-
   font-weight: 500;
 }
 
 .btn-keep {
   color: #881337;
-
   font-weight: 600;
 }
 
 .divider-line {
   height: 16px;
-
   width: 1px;
-
   background-color: #e7e5e4;
 }
-
 
 /* =========================================
    MODALS
