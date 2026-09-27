@@ -1,6 +1,6 @@
-/* =========================================================
+/* =========================================
    SUPABASE CONFIGURATION
-   ========================================================= */
+========================================= */
 
 const SUPABASE_URL =
   "https://hixflcifimnsutwzevim.supabase.co";
@@ -9,9 +9,9 @@ const SUPABASE_ANON_KEY =
   "sb_publishable_NxOlmZjO9B-EJnb6xtckvA_Ak129OON";
 
 
-/* =========================================================
-   SUPABASE REQUEST HELPER
-   ========================================================= */
+/* =========================================
+   SUPABASE REQUEST
+========================================= */
 
 async function supabaseRequest(
   path,
@@ -20,7 +20,6 @@ async function supabaseRequest(
 
   const url =
     `${SUPABASE_URL}/rest/v1/${path}`;
-
 
   const headers = {
 
@@ -34,7 +33,6 @@ async function supabaseRequest(
       "application/json",
 
     ...options.headers
-
   };
 
 
@@ -55,60 +53,43 @@ async function supabaseRequest(
       const errorText =
         await response.text();
 
-      console.error(
-        "Supabase error:",
-        response.status,
-        errorText
-      );
-
       throw new Error(
-        `Database error ${response.status}: ${errorText}`
+        `${response.status}: ${errorText}`
       );
     }
 
 
-    /*
-      DELETE / PATCH requests may return
-      no content.
-    */
-
-    if (
-      response.status === 204 ||
-      response.status === 201
-    ) {
-
-      const text =
-        await response.text();
-
-      if (!text) {
-        return [];
-      }
-
-      try {
-        return JSON.parse(text);
-      } catch {
-        return [];
-      }
+    if (response.status === 204) {
+      return [];
     }
 
 
-    return await response.json();
+    const text =
+      await response.text();
 
-  } catch (err) {
+
+    if (!text) {
+      return [];
+    }
+
+
+    return JSON.parse(text);
+
+  } catch (error) {
 
     console.error(
-      "Supabase API Connection Error:",
-      err
+      "Supabase API Error:",
+      error
     );
 
-    return null;
+    throw error;
   }
 }
 
 
-/* =========================================================
+/* =========================================
    GOOGLE BOOKS METADATA
-   ========================================================= */
+========================================= */
 
 async function fetchGoogleBookMetadata(
   title,
@@ -132,19 +113,19 @@ async function fetchGoogleBookMetadata(
 
   try {
 
-    const res =
+    const response =
       await fetch(url);
 
 
-    if (!res.ok) {
+    if (!response.ok) {
       throw new Error(
-        `Google Books error ${res.status}`
+        `Google Books returned ${response.status}`
       );
     }
 
 
     const data =
-      await res.json();
+      await response.json();
 
 
     if (
@@ -157,14 +138,8 @@ async function fetchGoogleBookMetadata(
 
 
       let cover =
-        volumeInfo.imageLinks?.thumbnail ||
-        '';
+        volumeInfo.imageLinks?.thumbnail || '';
 
-
-      /*
-        Google sometimes returns HTTP covers.
-        Upgrade to HTTPS.
-      */
 
       if (
         cover.startsWith('http://')
@@ -183,8 +158,7 @@ async function fetchGoogleBookMetadata(
         author:
           volumeInfo.authors
             ? volumeInfo.authors.join(', ')
-            : author ||
-              'Unknown Author',
+            : author || 'Unknown Author',
 
         description:
           volumeInfo.description ||
@@ -199,11 +173,11 @@ async function fetchGoogleBookMetadata(
       };
     }
 
-  } catch (e) {
+  } catch (error) {
 
     console.error(
       "Google Books search failed:",
-      e
+      error
     );
   }
 
@@ -211,8 +185,7 @@ async function fetchGoogleBookMetadata(
   return {
 
     author:
-      author ||
-      'Unknown Author',
+      author || 'Unknown Author',
 
     description:
       'No description found.',
@@ -226,9 +199,9 @@ async function fetchGoogleBookMetadata(
 }
 
 
-/* =========================================================
-   GET BOOKS THE USER HAS NOT YET VOTED ON
-   ========================================================= */
+/* =========================================
+   GET BOOKS THIS USER HAS NOT SWIPED
+========================================= */
 
 export async function apiGetUnswipedBooks(
   username
@@ -240,34 +213,19 @@ export async function apiGetUnswipedBooks(
     );
 
 
-  /*
-    If the swipe query fails, don't silently
-    pretend the user has never voted.
-  */
-
-  if (swipedData === null) {
-
-    console.error(
-      'Could not retrieve swipe history.'
-    );
-
-    return [];
-  }
-
-
   const excludedIds =
-    swipedData.map(
-      s => s.book_id
-    );
+    Array.isArray(swipedData)
+      ? swipedData.map(
+          swipe => swipe.book_id
+        )
+      : [];
 
 
   let path =
     'books?select=*&order=created_at.desc';
 
 
-  if (
-    excludedIds.length > 0
-  ) {
+  if (excludedIds.length > 0) {
 
     path +=
       `&id=not.in.(${excludedIds.join(',')})`;
@@ -280,9 +238,9 @@ export async function apiGetUnswipedBooks(
 }
 
 
-/* =========================================================
-   LOG PASS / KEEP
-   ========================================================= */
+/* =========================================
+   SAVE PASS / KEEP
+========================================= */
 
 export async function apiLogSwipe(
   username,
@@ -290,84 +248,24 @@ export async function apiLogSwipe(
   direction
 ) {
 
-  const data =
-    await supabaseRequest(
-      'swipes',
-      {
-        method: 'POST',
+  return await supabaseRequest(
+    'swipes',
+    {
+      method: 'POST',
 
-        body:
-          JSON.stringify({
-            user_id:
-              username,
-
-            book_id:
-              bookId,
-
-            direction:
-              direction
-          })
-      }
-    );
-
-
-  return data;
+      body: JSON.stringify({
+        user_id: username,
+        book_id: bookId,
+        direction
+      })
+    }
+  );
 }
 
 
-/* =========================================================
-   RESET ALL SWIPES FOR ONE USER
-   ========================================================= */
-
-export async function apiResetSwipes(
-  username
-) {
-
-  const encodedUsername =
-    encodeURIComponent(username);
-
-
-  const result =
-    await supabaseRequest(
-      `swipes?user_id=eq.${encodedUsername}`,
-      {
-        method: 'DELETE',
-        headers: {
-          'Prefer':
-            'return=minimal'
-        }
-      }
-    );
-
-
-  /*
-    supabaseRequest returns null
-    when there is an error.
-  */
-
-  if (result === null) {
-
-    return {
-      data: null,
-
-      error: {
-        message:
-          'Supabase rejected the reset request. Check the DELETE policy on the swipes table.'
-      }
-    };
-  }
-
-
-  return {
-    data: result,
-    error: null
-  };
-}
-
-
-/* =========================================================
+/* =========================================
    ADD BOOK
-   ========================================================= */
+========================================= */
 
 export async function apiAddBook(
   title,
@@ -399,19 +297,15 @@ export async function apiAddBook(
     metadata.description;
 
 
-  const data =
-    await supabaseRequest(
-      'books',
-      {
-        method: 'POST',
+  try {
 
-        headers: {
-          'Prefer':
-            'return=representation'
-        },
+    const data =
+      await supabaseRequest(
+        'books',
+        {
+          method: 'POST',
 
-        body:
-          JSON.stringify({
+          body: JSON.stringify({
 
             title:
               title.trim(),
@@ -431,29 +325,28 @@ export async function apiAddBook(
             rating:
               metadata.rating
           })
-      }
-    );
+        }
+      );
 
 
-  return {
+    return {
+      data,
+      error: null
+    };
 
-    data,
+  } catch (error) {
 
-    error:
-      data === null
-        ? {
-            message:
-              'Failed to post book record to cloud server.'
-          }
-        : null
-
-  };
+    return {
+      data: null,
+      error
+    };
+  }
 }
 
 
-/* =========================================================
-   GET GROUP MATCHES / LEADERBOARD
-   ========================================================= */
+/* =========================================
+   GET GROUP MATCHES
+========================================= */
 
 export async function apiGetMatches() {
 
@@ -473,7 +366,6 @@ export async function apiGetMatches() {
     !books ||
     !swipes
   ) {
-
     return [];
   }
 
@@ -481,67 +373,57 @@ export async function apiGetMatches() {
   const matchCounts = {};
 
 
-  swipes.forEach(
-    swipe => {
+  swipes.forEach(swipe => {
 
-      const bookId =
-        String(
-          swipe.book_id
-        );
+    const bookId =
+      String(swipe.book_id);
 
-
-      if (
-        !matchCounts[bookId]
-      ) {
-
-        matchCounts[bookId] = {
-          count: 0,
-          voters: []
-        };
-      }
+    const userId =
+      String(swipe.user_id).trim();
 
 
-      const userId =
-        String(
-          swipe.user_id
-        ).trim();
+    if (!matchCounts[bookId]) {
 
-
-      /*
-        Make sure one person cannot
-        count twice for the same book.
-      */
-
-      if (
-        !matchCounts[bookId]
-          .voters
-          .includes(userId)
-      ) {
-
-        matchCounts[bookId].count += 1;
-
-        matchCounts[bookId]
-          .voters
-          .push(userId);
-      }
+      matchCounts[bookId] = {
+        count: 0,
+        voters: []
+      };
     }
-  );
+
+
+    /*
+      Make sure one person cannot count
+      twice for the same book.
+    */
+
+    if (
+      !matchCounts[bookId]
+        .voters
+        .includes(userId)
+    ) {
+
+      matchCounts[bookId].count += 1;
+
+      matchCounts[bookId].voters.push(
+        userId
+      );
+    }
+
+  });
 
 
   return books
 
-    .map(
-      book => ({
+    .map(book => ({
 
-        ...book,
+      ...book,
 
-        voteCount:
-          matchCounts[
-            String(book.id)
-          ]?.count || 0
+      voteCount:
+        matchCounts[
+          String(book.id)
+        ]?.count || 0
 
-      })
-    )
+    }))
 
     .filter(
       book =>
@@ -553,4 +435,35 @@ export async function apiGetMatches() {
         b.voteCount -
         a.voteCount
     );
+}
+
+
+/* =========================================
+   RESET THIS USER'S SWIPES
+========================================= */
+
+export async function apiResetSwipes(
+  username
+) {
+
+  try {
+
+    await supabaseRequest(
+      `swipes?user_id=eq.${encodeURIComponent(username)}`,
+      {
+        method: 'DELETE'
+      }
+    );
+
+
+    return {
+      error: null
+    };
+
+  } catch (error) {
+
+    return {
+      error
+    };
+  }
 }

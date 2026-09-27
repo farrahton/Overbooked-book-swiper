@@ -7,19 +7,21 @@ import {
 } from './db.js';
 
 
-/* =========================================================
-   APP STATE
-   ========================================================= */
+/* =========================================
+   STATE
+========================================= */
 
 let currentUser =
   localStorage.getItem('swiper_username') || '';
 
 let bookQueue = [];
 
+let refreshTimer = null;
 
-/* =========================================================
-   EXPOSE INLINE HTML HANDLERS
-   ========================================================= */
+
+/* =========================================
+   EXPOSE BUTTON FUNCTIONS
+========================================= */
 
 window.saveUsername = saveUsername;
 window.handleManualSwipe = handleManualSwipe;
@@ -28,11 +30,12 @@ window.submitBook = submitBook;
 window.resetMySwipes = resetMySwipes;
 
 
-/* =========================================================
+/* =========================================
    INITIAL LOAD
-   ========================================================= */
+========================================= */
 
 if (currentUser) {
+
   document
     .getElementById('setup-screen')
     .classList
@@ -42,16 +45,17 @@ if (currentUser) {
 }
 
 
-/* =========================================================
+/* =========================================
    SAVE USERNAME
-   ========================================================= */
+========================================= */
 
 function saveUsername() {
 
-  const name = document
-    .getElementById('username-input')
-    .value
-    .trim();
+  const input =
+    document.getElementById('username-input');
+
+  const name =
+    input.value.trim();
 
   if (!name) {
     alert('Please enter a name.');
@@ -74,89 +78,327 @@ function saveUsername() {
 }
 
 
-/* =========================================================
+/* =========================================
    INITIALIZE APP
-   ========================================================= */
+========================================= */
 
 function initApp() {
 
-  document.getElementById(
-    'user-display'
-  ).innerText =
-    `Swiping as: ${currentUser}`;
+  document
+    .getElementById('user-display')
+    .innerText =
+      `Swiping as: ${currentUser}`;
 
   refreshDeck();
 
-
   /*
-    Check for new books / votes every 10 seconds.
+    Check for newly added books periodically.
+
+    IMPORTANT:
+    We only refresh when there is no active
+    book card. This prevents the current card
+    from disappearing every 10 seconds.
   */
-  setInterval(() => {
-    refreshDeck();
+
+  if (refreshTimer) {
+    clearInterval(refreshTimer);
+  }
+
+  refreshTimer = setInterval(() => {
+
+    const activeCard =
+      document.querySelector('.book-card');
+
+    if (!activeCard) {
+      refreshDeck();
+    }
+
   }, 10000);
 }
 
 
-/* =========================================================
+/* =========================================
    REFRESH BOOK DECK
-   ========================================================= */
+========================================= */
 
 async function refreshDeck() {
 
-  bookQueue =
-    await apiGetUnswipedBooks(currentUser);
+  if (!currentUser) return;
 
-  renderDeck();
+  try {
+
+    const books =
+      await apiGetUnswipedBooks(currentUser);
+
+    bookQueue = Array.isArray(books)
+      ? books
+      : [];
+
+    renderDeck();
+
+  } catch (error) {
+
+    console.error(
+      'Could not load books:',
+      error
+    );
+
+  }
 }
 
 
-/* =========================================================
+/* =========================================
    RENDER DECK
-   ========================================================= */
+========================================= */
 
 async function renderDeck() {
 
   const container =
-    document.getElementById(
-      'card-container'
-    );
+    document.getElementById('card-container');
 
   const emptyState =
-    document.getElementById(
-      'empty-state'
-    );
+    document.getElementById('empty-state');
 
   const footer =
     document.querySelector('footer');
 
-
   /*
-    Remove existing card.
+    Clear only the card container.
+    The leaderboard remains untouched
+    until we specifically need it.
   */
+
   container.innerHTML = '';
 
 
-  /* =======================================================
-     END OF CHAPTER
-     ======================================================= */
+  /* =======================================
+     NO BOOKS LEFT
+  ======================================= */
 
   if (bookQueue.length === 0) {
 
-    emptyState.classList.remove(
-      'hidden'
-    );
+    container.classList.add('hidden');
 
-    /*
-      Hide Pass / Keep buttons.
-    */
+    emptyState.classList.remove('hidden');
+
     footer.style.display = 'none';
 
+    await renderLeaderboard();
 
-    const matchesList =
-      document.getElementById(
-        'end-matches-list'
-      );
+    return;
+  }
 
+
+  /* =======================================
+     BOOKS AVAILABLE
+  ======================================= */
+
+  container.classList.remove('hidden');
+
+  emptyState.classList.add('hidden');
+
+  footer.style.display = '';
+
+
+  /* =======================================
+     GET NEXT BOOK
+  ======================================= */
+
+  const topBook =
+    bookQueue[bookQueue.length - 1];
+
+
+  /* =======================================
+     CREATE CARD
+  ======================================= */
+
+  const card =
+    document.createElement('div');
+
+  card.className = 'book-card';
+
+  card.id =
+    `card-${topBook.id}`;
+
+
+  /* =======================================
+     CONTENT WRAPPER
+  ======================================= */
+
+  const content =
+    document.createElement('div');
+
+  content.className =
+    'book-card-content';
+
+
+  /* =======================================
+     COVER
+  ======================================= */
+
+  if (
+    topBook.cover_url &&
+    topBook.cover_url.trim() !== ''
+  ) {
+
+    const cover =
+      document.createElement('img');
+
+    cover.src =
+      topBook.cover_url;
+
+    cover.alt =
+      topBook.title || 'Book cover';
+
+    cover.className =
+      'book-cover';
+
+    /*
+      If an image fails, hide it instead of
+      leaving a broken image icon.
+    */
+
+    cover.onerror = () => {
+      cover.style.display = 'none';
+    };
+
+    content.appendChild(cover);
+
+  } else {
+
+    const quote =
+      document.createElement('div');
+
+    quote.className =
+      'card-quote-mark';
+
+    quote.innerText =
+      '“';
+
+    content.appendChild(quote);
+  }
+
+
+  /* =======================================
+     BOOK INFORMATION
+  ======================================= */
+
+  const info =
+    document.createElement('div');
+
+  info.className =
+    'book-info';
+
+
+  /* TITLE */
+
+  const title =
+    document.createElement('h3');
+
+  title.className =
+    'card-title';
+
+  title.innerText =
+    topBook.title || 'Untitled';
+
+  info.appendChild(title);
+
+
+  /* AUTHOR */
+
+  const author =
+    document.createElement('p');
+
+  author.className =
+    'card-author';
+
+  author.innerText =
+    topBook.author || 'Unknown Author';
+
+  info.appendChild(author);
+
+
+  /* RATING */
+
+  if (topBook.rating) {
+
+    const rating =
+      document.createElement('p');
+
+    rating.className =
+      'card-rating';
+
+    rating.innerText =
+      `⭐ ${Number(topBook.rating).toFixed(1)} / 5`;
+
+    info.appendChild(rating);
+  }
+
+
+  /* DESCRIPTION */
+
+  const description =
+    document.createElement('p');
+
+  description.className =
+    'card-description';
+
+  description.innerText =
+    topBook.description ||
+    'No summary available.';
+
+  info.appendChild(description);
+
+
+  /* ADD INFO */
+
+  content.appendChild(info);
+
+  card.appendChild(content);
+
+  container.appendChild(card);
+}
+
+
+/* =========================================
+   LEADERBOARD
+========================================= */
+
+async function renderLeaderboard() {
+
+  const matchesList =
+    document.getElementById(
+      'end-matches-list'
+    );
+
+  matchesList.innerHTML = `
+    <p style="
+      font-size: 11px;
+      color: #a8a29e;
+      text-align: center;
+      padding: 16px 0;
+      font-weight: 300;
+    ">
+      Consulting database logs...
+    </p>
+  `;
+
+
+  const winningBooks =
+    await apiGetMatches();
+
+
+  matchesList.innerHTML = '';
+
+
+  /* =======================================
+     NO MATCHES
+  ======================================= */
+
+  if (
+    !winningBooks ||
+    winningBooks.length === 0
+  ) {
 
     matchesList.innerHTML = `
       <p style="
@@ -166,487 +408,134 @@ async function renderDeck() {
         padding: 16px 0;
         font-weight: 300;
       ">
-        Consulting database logs...
+        No group matches yet. Wait for friends
+        to finish reading through the stack!
       </p>
     `;
-
-
-    const winningBooks =
-      await apiGetMatches();
-
-
-    matchesList.innerHTML = '';
-
-
-    /* =====================================================
-       NO MATCHES
-       ===================================================== */
-
-    if (winningBooks.length === 0) {
-
-      matchesList.innerHTML = `
-        <p style="
-          font-size: 11px;
-          color: #a8a29e;
-          text-align: center;
-          padding: 16px 0;
-          font-weight: 300;
-        ">
-          No group matches yet.
-          Wait for friends to finish!
-        </p>
-      `;
-
-      return;
-    }
-
-
-    /* =====================================================
-       BUILD LEADERBOARD
-       ===================================================== */
-
-    winningBooks.forEach(book => {
-
-      const item =
-        document.createElement('div');
-
-      item.className =
-        'leaderboard-row';
-
-
-      /* ---------------------------------------------------
-         LEFT SIDE
-         --------------------------------------------------- */
-
-      const textContainer =
-        document.createElement('div');
-
-      textContainer.style.cssText =
-        `
-        min-width: 0;
-        flex: 1;
-        padding-right: 12px;
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        `;
-
-
-      /* ---------------------------------------------------
-         BOOK COVER
-         --------------------------------------------------- */
-
-      if (
-        book.cover_url &&
-        book.cover_url.trim() !== ''
-      ) {
-
-        const thumbImg =
-          document.createElement('img');
-
-        thumbImg.src =
-          book.cover_url;
-
-        thumbImg.alt = '';
-
-        thumbImg.loading = 'lazy';
-
-        thumbImg.style.cssText =
-          `
-          width: 36px;
-          height: 50px;
-          object-fit: cover;
-          border-radius: 3px;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-          flex-shrink: 0;
-          `;
-
-        /*
-          If a cover URL fails, simply hide
-          the broken image.
-        */
-        thumbImg.onerror = () => {
-          thumbImg.style.display = 'none';
-        };
-
-        textContainer.appendChild(
-          thumbImg
-        );
-      }
-
-
-      /* ---------------------------------------------------
-         TITLE + AUTHOR
-         --------------------------------------------------- */
-
-      const metaBox =
-        document.createElement('div');
-
-      metaBox.style.cssText =
-        `
-        min-width: 0;
-        flex: 1;
-        `;
-
-
-      const rowTitle =
-        document.createElement('h4');
-
-      rowTitle.className =
-        'font-serif';
-
-      rowTitle.style.cssText =
-        `
-        font-size: 13px;
-        font-weight: 500;
-        color: #1c1917;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        `;
-
-      rowTitle.innerText =
-        book.title;
-
-
-      const rowAuthor =
-        document.createElement('p');
-
-      rowAuthor.style.cssText =
-        `
-        font-size: 9px;
-        text-transform: uppercase;
-        color: #a8a29e;
-        letter-spacing: 0.03em;
-        margin-top: 1px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        `;
-
-      rowAuthor.innerText =
-        book.author || 'Unknown';
-
-
-      metaBox.appendChild(
-        rowTitle
-      );
-
-      metaBox.appendChild(
-        rowAuthor
-      );
-
-      textContainer.appendChild(
-        metaBox
-      );
-
-
-      /* ---------------------------------------------------
-         VOTE BADGE
-         --------------------------------------------------- */
-
-      const voteBadge =
-        document.createElement('div');
-
-      voteBadge.className =
-        'badge-votes';
-
-      voteBadge.innerText =
-        `${book.voteCount} Vote${
-          book.voteCount === 1
-            ? ''
-            : 's'
-        }`;
-
-
-      /* ---------------------------------------------------
-         ADD ROW
-         --------------------------------------------------- */
-
-      item.appendChild(
-        textContainer
-      );
-
-      item.appendChild(
-        voteBadge
-      );
-
-      matchesList.appendChild(
-        item
-      );
-
-    });
-
 
     return;
   }
 
 
-  /* =======================================================
-     ACTIVE BOOK CARD
-     ======================================================= */
+  /* =======================================
+     BUILD ALL ROWS
+  ======================================= */
 
-  /*
-    Hide leaderboard.
-  */
-  emptyState.classList.add(
-    'hidden'
-  );
+  winningBooks.forEach(book => {
 
-
-  /*
-    Show Pass / Keep buttons.
-  */
-  footer.style.display = '';
-
-
-  /*
-    Get next book.
-  */
-  const topBook =
-    bookQueue[
-      bookQueue.length - 1
-    ];
-
-
-  /* =======================================================
-     CREATE CARD
-     ======================================================= */
-
-  const card =
-    document.createElement('div');
-
-  card.className =
-    'book-card';
-
-  card.style.height =
-    '100%';
-
-  card.id =
-    `card-${topBook.id}`;
-
-
-  /* =======================================================
-     CARD CONTENT WRAPPER
-     ======================================================= */
-
-  const scrollWrapper =
-    document.createElement('div');
-
-  scrollWrapper.style.cssText =
-    `
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    overflow-y: auto;
-    max-height: 100%;
-    width: 100%;
-    `;
-
-
-  /* =======================================================
-     BOOK COVER
-     ======================================================= */
-
-  if (
-    topBook.cover_url &&
-    topBook.cover_url.trim() !== ''
-  ) {
-
-    const mainCoverImg =
-      document.createElement('img');
-
-    mainCoverImg.src =
-      topBook.cover_url;
-
-    mainCoverImg.alt =
-      topBook.title ||
-      'Book cover';
-
-    mainCoverImg.style.cssText =
-      `
-      width: 90px;
-      height: 135px;
-      object-fit: cover;
-      border-radius: 6px;
-      box-shadow:
-        0 4px 12px rgba(44,39,36,0.15);
-      margin-bottom: 4px;
-      flex-shrink: 0;
-      `;
-
-    scrollWrapper.appendChild(
-      mainCoverImg
-    );
-
-  } else {
-
-    const defaultQuote =
+    const item =
       document.createElement('div');
 
-    defaultQuote.className =
-      'card-quote-mark font-serif';
-
-    defaultQuote.innerText =
-      '“';
-
-    scrollWrapper.appendChild(
-      defaultQuote
-    );
-  }
+    item.className =
+      'leaderboard-row';
 
 
-  /* =======================================================
-     BOOK INFORMATION
-     ======================================================= */
+    /* BOOK INFO */
 
-  const infoDetailsBox =
-    document.createElement('div');
+    const info =
+      document.createElement('div');
 
-  infoDetailsBox.style.cssText =
-    `
-    padding: 0 4px;
-    width: 100%;
-    `;
+    info.className =
+      'leaderboard-book-info';
 
 
-  /* -------------------------------------------------------
-     TITLE
-     ------------------------------------------------------- */
+    /* COVER */
 
-  const mainTitleElement =
-    document.createElement('h3');
+    if (
+      book.cover_url &&
+      book.cover_url.trim() !== ''
+    ) {
 
-  mainTitleElement.className =
-    'font-serif card-title';
+      const image =
+        document.createElement('img');
 
-  mainTitleElement.style.cssText =
-    `
-    font-size: 20px;
-    margin-bottom: 4px;
-    line-clamp: 2;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    `;
+      image.src =
+        book.cover_url;
 
-  mainTitleElement.innerText =
-    topBook.title;
+      image.alt = '';
 
-  infoDetailsBox.appendChild(
-    mainTitleElement
-  );
+      image.className =
+        'leaderboard-cover';
+
+      image.onerror = () => {
+        image.style.display = 'none';
+      };
+
+      info.appendChild(image);
+    }
 
 
-  /* -------------------------------------------------------
-     AUTHOR
-     ------------------------------------------------------- */
+    /* META */
 
-  const mainAuthorElement =
-    document.createElement('p');
+    const meta =
+      document.createElement('div');
 
-  mainAuthorElement.className =
-    'card-author';
-
-  mainAuthorElement.style.cssText =
-    `
-    font-size: 11px;
-    margin-bottom: 4px;
-    `;
-
-  mainAuthorElement.innerText =
-    topBook.author ||
-    'Unknown Author';
-
-  infoDetailsBox.appendChild(
-    mainAuthorElement
-  );
+    meta.className =
+      'leaderboard-meta';
 
 
-  /* -------------------------------------------------------
-     RATING
-     ------------------------------------------------------- */
+    /* TITLE */
 
-  if (topBook.rating) {
+    const title =
+      document.createElement('h4');
 
-    const ratingElement =
+    title.className =
+      'leaderboard-title';
+
+    title.innerText =
+      book.title || 'Untitled';
+
+
+    /* AUTHOR */
+
+    const author =
       document.createElement('p');
 
-    ratingElement.style.cssText =
-      `
-      font-size: 10px;
-      color: #ca8a04;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-      margin-bottom: 8px;
-      `;
+    author.className =
+      'leaderboard-author';
 
-    ratingElement.innerText =
-      `⭐ ${Number(
-        topBook.rating
-      ).toFixed(1)} / 5`;
-
-    infoDetailsBox.appendChild(
-      ratingElement
-    );
-  }
+    author.innerText =
+      book.author || 'Unknown';
 
 
-  /* -------------------------------------------------------
-     DESCRIPTION
-     ------------------------------------------------------- */
+    meta.appendChild(title);
 
-  const descriptionElement =
-    document.createElement('p');
+    meta.appendChild(author);
 
-  descriptionElement.style.cssText =
-    `
-    font-size: 11px;
-    color: #57534e;
-    text-align: justify;
-    line-height: 1.5;
-    font-weight: 300;
-    margin-top: 4px;
-    `;
-
-  descriptionElement.innerText =
-    topBook.description ||
-    'No summary available.';
-
-  infoDetailsBox.appendChild(
-    descriptionElement
-  );
+    info.appendChild(meta);
 
 
-  scrollWrapper.appendChild(
-    infoDetailsBox
-  );
+    /* VOTES */
 
-  card.appendChild(
-    scrollWrapper
-  );
+    const votes =
+      document.createElement('div');
 
+    votes.className =
+      'badge-votes';
 
-  /*
-    IMPORTANT:
-    There is deliberately NO swipe gesture code here.
-
-    The description can be freely scrolled without
-    accidentally passing or keeping the book.
-  */
+    votes.innerText =
+      `${book.voteCount} ${
+        book.voteCount === 1
+          ? 'Vote'
+          : 'Votes'
+      }`;
 
 
-  container.appendChild(
-    card
-  );
+    /* ADD ROW */
+
+    item.appendChild(info);
+
+    item.appendChild(votes);
+
+    matchesList.appendChild(item);
+
+  });
 }
 
 
-/* =========================================================
-   MANUAL PASS / KEEP
-   ========================================================= */
+/* =========================================
+   PASS / KEEP
+========================================= */
 
 function handleManualSwipe(direction) {
 
@@ -654,30 +543,25 @@ function handleManualSwipe(direction) {
     return;
   }
 
-
   const topBook =
-    bookQueue[
-      bookQueue.length - 1
-    ];
+    bookQueue[bookQueue.length - 1];
 
-
-  const cardEl =
+  const card =
     document.getElementById(
       `card-${topBook.id}`
     );
 
-
   executeSwipe(
     topBook.id,
     direction,
-    cardEl
+    card
   );
 }
 
 
-/* =========================================================
+/* =========================================
    EXECUTE PASS / KEEP
-   ========================================================= */
+========================================= */
 
 async function executeSwipe(
   bookId,
@@ -686,119 +570,111 @@ async function executeSwipe(
 ) {
 
   /*
-    Animate card away.
+    Disable the buttons while the request
+    is being processed.
   */
+
+  const footerButtons =
+    document.querySelectorAll(
+      '.footer-btn'
+    );
+
+  footerButtons.forEach(button => {
+    button.disabled = true;
+    button.style.opacity = '0.5';
+  });
+
+
+  /* Simple fade animation */
+
   if (cardEl) {
 
-    const flyX =
-      direction === 'right'
-        ? window.innerWidth + 200
-        : -(window.innerWidth + 200);
-
-
-    cardEl.style.transform =
-      `
-      translate(${flyX}px, 0px)
-      rotate(${flyX / 12}deg)
-      `;
+    cardEl.style.transition =
+      'opacity 0.2s ease';
 
     cardEl.style.opacity =
       '0';
   }
 
 
-  /*
-    Save swipe.
-  */
-  await apiLogSwipe(
-    currentUser,
-    bookId,
-    direction
-  );
+  try {
 
-
-  /*
-    Remove book from local queue.
-  */
-  bookQueue.pop();
-
-
-  /*
-    Wait for animation.
-  */
-  setTimeout(() => {
-    renderDeck();
-  }, 250);
-}
-
-
-/* =========================================================
-   RESET ALL MY SWIPES
-   ========================================================= */
-
-async function resetMySwipes() {
-
-  const confirmed =
-    confirm(
-      'Reset your reading stack?\n\n' +
-      'This will delete ALL of your Pass and Keep choices ' +
-      'and let you start again.'
+    await apiLogSwipe(
+      currentUser,
+      bookId,
+      direction
     );
 
+    /*
+      Remove the current book from the
+      local queue.
+    */
 
-  if (!confirmed) {
-    return;
-  }
+    bookQueue.pop();
 
+  } catch (error) {
 
-  const result =
-    await apiResetSwipes(
-      currentUser
+    console.error(
+      'Could not save swipe:',
+      error
     );
-
-
-  if (result.error) {
 
     alert(
-      'Could not reset your swipes.\n\n' +
-      result.error.message
+      'Something went wrong saving your choice.'
     );
 
-    return;
   }
 
 
+  /* Re-enable buttons */
+
+  footerButtons.forEach(button => {
+    button.disabled = false;
+    button.style.opacity = '';
+  });
+
+
   /*
-    Reload the deck.
+    Render immediately after the choice.
   */
-  await refreshDeck();
 
-
-  alert(
-    'Your swipes have been reset.'
-  );
+  await renderDeck();
 }
 
 
-/* =========================================================
-   MODAL
-   ========================================================= */
+/* =========================================
+   ADD BOOK MODAL
+========================================= */
 
 function toggleModal(show) {
 
-  document
-    .getElementById('add-modal')
-    .classList
-    .toggle(
-      'hidden',
-      !show
-    );
+  const modal =
+    document.getElementById('add-modal');
+
+  if (!modal) return;
+
+  if (show) {
+
+    modal.classList.remove('hidden');
+
+    setTimeout(() => {
+
+      document
+        .getElementById('book-title')
+        .focus();
+
+    }, 50);
+
+  } else {
+
+    modal.classList.add('hidden');
+  }
 }
 
 
-/* =========================================================
+/* =========================================
    SUBMIT NEW BOOK
-   ========================================================= */
+========================================= */
 
 async function submitBook() {
 
@@ -808,20 +684,17 @@ async function submitBook() {
       .value
       .trim();
 
-
   const author =
     document
       .getElementById('book-author')
       .value
       .trim();
 
-
   const manualCover =
     document
       .getElementById('book-cover-manual')
       .value
       .trim();
-
 
   const manualDesc =
     document
@@ -840,61 +713,132 @@ async function submitBook() {
   }
 
 
-  const {
-    data,
-    error
-  } =
-    await apiAddBook(
-      title,
-      author,
-      manualCover,
-      manualDesc,
-      currentUser
+  try {
+
+    const result =
+      await apiAddBook(
+        title,
+        author,
+        manualCover,
+        manualDesc,
+        currentUser
+      );
+
+
+    if (result.error) {
+
+      alert(
+        'Error adding book: ' +
+        result.error.message
+      );
+
+      return;
+    }
+
+
+    /* Clear form */
+
+    document
+      .getElementById('book-title')
+      .value = '';
+
+    document
+      .getElementById('book-author')
+      .value = '';
+
+    document
+      .getElementById('book-cover-manual')
+      .value = '';
+
+    document
+      .getElementById('book-description-manual')
+      .value = '';
+
+
+    /* Close modal */
+
+    toggleModal(false);
+
+
+    /*
+      Reload the book list.
+    */
+
+    await refreshDeck();
+
+  } catch (error) {
+
+    console.error(
+      'Error submitting book:',
+      error
     );
-
-
-  if (error) {
 
     alert(
-      'Error adding book: ' +
-      error.message
+      'Something went wrong adding the book.'
     );
+  }
+}
 
+
+/* =========================================
+   RESET ALL MY SWIPES
+========================================= */
+
+async function resetMySwipes() {
+
+  if (!currentUser) {
     return;
   }
 
 
-  /*
-    Clear form.
-  */
-
-  document
-    .getElementById('book-title')
-    .value = '';
-
-  document
-    .getElementById('book-author')
-    .value = '';
-
-  document
-    .getElementById('book-cover-manual')
-    .value = '';
-
-  document
-    .getElementById('book-description-manual')
-    .value = '';
+  const confirmed =
+    confirm(
+      `Reset all your Pass/Keep choices for "${currentUser}"?\n\nYou will see all the books again.`
+    );
 
 
-  /*
-    Close modal.
-  */
-
-  toggleModal(false);
+  if (!confirmed) {
+    return;
+  }
 
 
-  /*
-    Reload books.
-  */
+  try {
 
-  refreshDeck();
+    const result =
+      await apiResetSwipes(currentUser);
+
+
+    if (result.error) {
+
+      alert(
+        'Could not reset your swipes:\n\n' +
+        result.error.message
+      );
+
+      return;
+    }
+
+
+    /*
+      Reload the entire book queue.
+    */
+
+    await refreshDeck();
+
+
+    alert(
+      'Your swipes have been reset.'
+    );
+
+  } catch (error) {
+
+    console.error(
+      'Reset error:',
+      error
+    );
+
+    alert(
+      'Something went wrong while resetting your swipes.'
+    );
+  }
 }
