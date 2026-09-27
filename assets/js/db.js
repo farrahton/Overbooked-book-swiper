@@ -438,32 +438,33 @@ export async function apiGetMatches() {
 }
 
 
-/* =========================================
-   RESET THIS USER'S SWIPES
-========================================= */
+// /* =========================================
+//    RESET THIS USER'S SWIPES
+// RESET FEATURE DISABLED FOR NOW
+// ========================================= */
 
-export async function apiResetSwipes(
-  username
-) {
+// export async function apiResetSwipes(
+//   username
+// ) {
 
-  try {
+//   try {
 
-    await supabaseRequest(
-      `swipes?user_id=eq.${encodeURIComponent(username)}`,
-      {
-        method: 'DELETE'
-      }
-    );
+//     await supabaseRequest(
+//       `swipes?user_id=eq.${encodeURIComponent(username)}`,
+//       {
+//         method: 'DELETE'
+//       }
+//     );
 
 
-    return {
-      error: null
-    };
+//     return {
+//       error: null
+//     };
 
-  } catch (error) {
+//   } catch (error) {
 
-    return {
-      error
-    };
-  }
-}
+//     return {
+//       error
+//     };
+//   }
+// }

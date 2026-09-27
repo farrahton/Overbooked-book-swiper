@@ -3,7 +3,7 @@ import {
   apiLogSwipe,
   apiAddBook,
   apiGetMatches,
-  apiResetSwipes
+  // apiResetSwipes RESET FEATURE DISABLED FOR NOW
 } from './db.js';
 
 
@@ -27,7 +27,8 @@ window.saveUsername = saveUsername;
 window.handleManualSwipe = handleManualSwipe;
 window.toggleModal = toggleModal;
 window.submitBook = submitBook;
-window.resetMySwipes = resetMySwipes;
+// RESET FEATURE DISABLED FOR NOW
+// window.resetMySwipes = resetMySwipes;
 
 
 /* =========================================
