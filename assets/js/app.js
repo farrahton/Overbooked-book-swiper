@@ -7,6 +7,10 @@ import {
 } from './db.js';
 
 
+/* =========================================================
+   APP STATE
+   ========================================================= */
+
 let currentUser =
   localStorage.getItem('swiper_username') || '';
 
@@ -14,7 +18,7 @@ let bookQueue = [];
 
 
 /* =========================================================
-   EXPOSE HANDLERS TO INLINE HTML ONCLICK LISTENERS
+   EXPOSE INLINE HTML HANDLERS
    ========================================================= */
 
 window.saveUsername = saveUsername;
@@ -25,11 +29,10 @@ window.resetMySwipes = resetMySwipes;
 
 
 /* =========================================================
-   INITIAL APP LOAD
+   INITIAL LOAD
    ========================================================= */
 
 if (currentUser) {
-
   document
     .getElementById('setup-screen')
     .classList
@@ -45,14 +48,14 @@ if (currentUser) {
 
 function saveUsername() {
 
-  const name =
-    document
-      .getElementById('username-input')
-      .value
-      .trim();
+  const name = document
+    .getElementById('username-input')
+    .value
+    .trim();
 
   if (!name) {
-    return alert('Please enter a name.');
+    alert('Please enter a name.');
+    return;
   }
 
   localStorage.setItem(
@@ -77,17 +80,17 @@ function saveUsername() {
 
 function initApp() {
 
-  document
-    .getElementById('user-display')
-    .innerText =
-      `Swiping as: ${currentUser}`;
+  document.getElementById(
+    'user-display'
+  ).innerText =
+    `Swiping as: ${currentUser}`;
 
   refreshDeck();
 
 
   /*
-   * Check for new books every 10 seconds.
-   */
+    Check for new books / votes every 10 seconds.
+  */
   setInterval(() => {
     refreshDeck();
   }, 10000);
@@ -128,8 +131,8 @@ async function renderDeck() {
 
 
   /*
-   * Remove existing card.
-   */
+    Remove existing card.
+  */
   container.innerHTML = '';
 
 
@@ -143,6 +146,9 @@ async function renderDeck() {
       'hidden'
     );
 
+    /*
+      Hide Pass / Keep buttons.
+    */
     footer.style.display = 'none';
 
 
@@ -152,9 +158,6 @@ async function renderDeck() {
       );
 
 
-    /*
-     * Loading message.
-     */
     matchesList.innerHTML = `
       <p style="
         font-size: 11px;
@@ -190,7 +193,7 @@ async function renderDeck() {
           font-weight: 300;
         ">
           No group matches yet.
-          Wait for friends to finish swiping!
+          Wait for friends to finish!
         </p>
       `;
 
@@ -246,15 +249,25 @@ async function renderDeck() {
 
         thumbImg.alt = '';
 
+        thumbImg.loading = 'lazy';
+
         thumbImg.style.cssText =
           `
-          width: 24px;
-          height: 36px;
+          width: 36px;
+          height: 50px;
           object-fit: cover;
-          border-radius: 2px;
+          border-radius: 3px;
           box-shadow: 0 1px 3px rgba(0,0,0,0.15);
           flex-shrink: 0;
           `;
+
+        /*
+          If a cover URL fails, simply hide
+          the broken image.
+        */
+        thumbImg.onerror = () => {
+          thumbImg.style.display = 'none';
+        };
 
         textContainer.appendChild(
           thumbImg
@@ -263,7 +276,7 @@ async function renderDeck() {
 
 
       /* ---------------------------------------------------
-         BOOK TITLE + AUTHOR
+         TITLE + AUTHOR
          --------------------------------------------------- */
 
       const metaBox =
@@ -339,11 +352,15 @@ async function renderDeck() {
         'badge-votes';
 
       voteBadge.innerText =
-        `${book.voteCount} Votes`;
+        `${book.voteCount} Vote${
+          book.voteCount === 1
+            ? ''
+            : 's'
+        }`;
 
 
       /* ---------------------------------------------------
-         ADD EVERYTHING
+         ADD ROW
          --------------------------------------------------- */
 
       item.appendChild(
@@ -357,6 +374,7 @@ async function renderDeck() {
       matchesList.appendChild(
         item
       );
+
     });
 
 
@@ -365,19 +383,26 @@ async function renderDeck() {
 
 
   /* =======================================================
-     ACTIVE BOOK CARDS
+     ACTIVE BOOK CARD
      ======================================================= */
 
+  /*
+    Hide leaderboard.
+  */
   emptyState.classList.add(
     'hidden'
   );
 
+
+  /*
+    Show Pass / Keep buttons.
+  */
   footer.style.display = '';
 
 
   /*
-   * Get next book.
-   */
+    Get next book.
+  */
   const topBook =
     bookQueue[
       bookQueue.length - 1
@@ -415,19 +440,9 @@ async function renderDeck() {
     flex-direction: column;
     align-items: center;
     gap: 12px;
-
-    /*
-     * The description can scroll normally.
-     */
     overflow-y: auto;
-
     max-height: 100%;
     width: 100%;
-
-    /*
-     * Makes scrolling feel better on iOS.
-     */
-    -webkit-overflow-scrolling: touch;
     `;
 
 
@@ -447,7 +462,8 @@ async function renderDeck() {
       topBook.cover_url;
 
     mainCoverImg.alt =
-      topBook.title || 'Book cover';
+      topBook.title ||
+      'Book cover';
 
     mainCoverImg.style.cssText =
       `
@@ -455,7 +471,8 @@ async function renderDeck() {
       height: 135px;
       object-fit: cover;
       border-radius: 6px;
-      box-shadow: 0 4px 12px rgba(44,39,36,0.15);
+      box-shadow:
+        0 4px 12px rgba(44,39,36,0.15);
       margin-bottom: 4px;
       flex-shrink: 0;
       `;
@@ -509,11 +526,9 @@ async function renderDeck() {
     `
     font-size: 20px;
     margin-bottom: 4px;
-
+    line-clamp: 2;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
-
     overflow: hidden;
     `;
 
@@ -569,7 +584,9 @@ async function renderDeck() {
       `;
 
     ratingElement.innerText =
-      `⭐ ${Number(topBook.rating).toFixed(1)} / 5`;
+      `⭐ ${Number(
+        topBook.rating
+      ).toFixed(1)} / 5`;
 
     infoDetailsBox.appendChild(
       ratingElement
@@ -591,7 +608,6 @@ async function renderDeck() {
     text-align: justify;
     line-height: 1.5;
     font-weight: 300;
-
     margin-top: 4px;
     `;
 
@@ -604,10 +620,6 @@ async function renderDeck() {
   );
 
 
-  /* -------------------------------------------------------
-     ADD INFORMATION TO CARD
-     ------------------------------------------------------- */
-
   scrollWrapper.appendChild(
     infoDetailsBox
   );
@@ -618,14 +630,12 @@ async function renderDeck() {
 
 
   /*
-   * IMPORTANT:
-   *
-   * There is deliberately NO:
-   *
-   * setupSwipeGestures(...)
-   *
-   * The card is completely non-swipeable.
-   */
+    IMPORTANT:
+    There is deliberately NO swipe gesture code here.
+
+    The description can be freely scrolled without
+    accidentally passing or keeping the book.
+  */
 
 
   container.appendChild(
@@ -635,7 +645,7 @@ async function renderDeck() {
 
 
 /* =========================================================
-   MANUAL PASS / KEEP BUTTONS
+   MANUAL PASS / KEEP
    ========================================================= */
 
 function handleManualSwipe(direction) {
@@ -676,28 +686,30 @@ async function executeSwipe(
 ) {
 
   /*
-   * Simple visual feedback.
-   * No dragging or swiping.
-   */
-
+    Animate card away.
+  */
   if (cardEl) {
 
-    cardEl.style.transition =
-      'opacity 0.2s ease, transform 0.2s ease';
+    const flyX =
+      direction === 'right'
+        ? window.innerWidth + 200
+        : -(window.innerWidth + 200);
+
+
+    cardEl.style.transform =
+      `
+      translate(${flyX}px, 0px)
+      rotate(${flyX / 12}deg)
+      `;
 
     cardEl.style.opacity =
       '0';
-
-    cardEl.style.transform =
-      direction === 'right'
-        ? 'translateX(40px)'
-        : 'translateX(-40px)';
   }
 
 
   /*
-   * Save decision.
-   */
+    Save swipe.
+  */
   await apiLogSwipe(
     currentUser,
     bookId,
@@ -706,19 +718,17 @@ async function executeSwipe(
 
 
   /*
-   * Remove current book.
-   */
+    Remove book from local queue.
+  */
   bookQueue.pop();
 
 
   /*
-   * Render next card.
-   */
+    Wait for animation.
+  */
   setTimeout(() => {
-
     renderDeck();
-
-  }, 200);
+  }, 250);
 }
 
 
@@ -728,16 +738,11 @@ async function executeSwipe(
 
 async function resetMySwipes() {
 
-  if (!currentUser) {
-    return;
-  }
-
-
   const confirmed =
     confirm(
-      'Reset your reading decisions?\n\n' +
-      'This will delete all your Pass and Keep choices ' +
-      'so you can go through the entire book pool again.'
+      'Reset your reading stack?\n\n' +
+      'This will delete ALL of your Pass and Keep choices ' +
+      'and let you start again.'
     );
 
 
@@ -755,7 +760,7 @@ async function resetMySwipes() {
   if (result.error) {
 
     alert(
-      'Could not reset your swipes: ' +
+      'Could not reset your swipes.\n\n' +
       result.error.message
     );
 
@@ -764,9 +769,14 @@ async function resetMySwipes() {
 
 
   /*
-   * Reload the entire book pool.
-   */
+    Reload the deck.
+  */
   await refreshDeck();
+
+
+  alert(
+    'Your swipes have been reset.'
+  );
 }
 
 
@@ -822,13 +832,18 @@ async function submitBook() {
 
   if (!title) {
 
-    return alert(
+    alert(
       'Title is required!'
     );
+
+    return;
   }
 
 
-  const { error } =
+  const {
+    data,
+    error
+  } =
     await apiAddBook(
       title,
       author,
@@ -840,16 +855,18 @@ async function submitBook() {
 
   if (error) {
 
-    return alert(
+    alert(
       'Error adding book: ' +
       error.message
     );
+
+    return;
   }
 
 
-  /* -------------------------------------------------------
-     CLEAR FORM
-     ------------------------------------------------------- */
+  /*
+    Clear form.
+  */
 
   document
     .getElementById('book-title')
@@ -868,16 +885,16 @@ async function submitBook() {
     .value = '';
 
 
-  /* -------------------------------------------------------
-     CLOSE MODAL
-     ------------------------------------------------------- */
+  /*
+    Close modal.
+  */
 
   toggleModal(false);
 
 
-  /* -------------------------------------------------------
-     RELOAD BOOKS
-     ------------------------------------------------------- */
+  /*
+    Reload books.
+  */
 
   refreshDeck();
 }

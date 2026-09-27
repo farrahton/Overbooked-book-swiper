@@ -25,7 +25,14 @@
       Overbooked's TBR 📚
     </h2>
 
-    <p id="user-display"></p>
+   <p id="user-display"></p>
+
+<button
+  onclick="resetMySwipes()"
+  class="btn-reset"
+>
+  Reset my swipes
+</button>
   </div>
 
   <div class="header-actions">
@@ -63,10 +70,24 @@
 
   <!-- Action Controls -->
   <footer>
-    <button onclick="handleManualSwipe('left')" class="footer-btn btn-pass">Pass</button>
-    <div class="divider-line"></div>
-    <button onclick="handleManualSwipe('right')" class="footer-btn btn-keep">Keep</button>
-  </footer>
+
+  <button
+    onclick="handleManualSwipe('left')"
+    class="footer-btn btn-pass"
+  >
+    Pass
+  </button>
+
+  <div class="divider-line"></div>
+
+  <button
+    onclick="handleManualSwipe('right')"
+    class="footer-btn btn-keep"
+  >
+    Keep
+  </button>
+
+</footer>
 
   <!-- Submission Form Popover Dialogue -->
   <div id="add-modal" class="modal-overlay hidden">

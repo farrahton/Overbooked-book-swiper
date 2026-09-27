@@ -3,10 +3,10 @@
    ========================================================= */
 
 const SUPABASE_URL =
-  'https://hixflcifimnsutwzevim.supabase.co';
+  "https://hixflcifimnsutwzevim.supabase.co";
 
 const SUPABASE_ANON_KEY =
-  'sb_publishable_NxOlmZjO9B-EJnb6xtckvA_Ak129OON';
+  "sb_publishable_NxOlmZjO9B-EJnb6xtckvA_Ak129OON";
 
 
 /* =========================================================
@@ -24,16 +24,17 @@ async function supabaseRequest(
 
   const headers = {
 
-    'apikey':
+    "apikey":
       SUPABASE_ANON_KEY,
 
-    'Authorization':
+    "Authorization":
       `Bearer ${SUPABASE_ANON_KEY}`,
 
-    'Content-Type':
-      'application/json',
+    "Content-Type":
+      "application/json",
 
     ...options.headers
+
   };
 
 
@@ -55,42 +56,39 @@ async function supabaseRequest(
         await response.text();
 
       console.error(
-        'Supabase error:',
+        "Supabase error:",
         response.status,
         errorText
       );
 
       throw new Error(
-        `Database error: ${response.status}`
+        `Database error ${response.status}: ${errorText}`
       );
     }
 
 
     /*
-     * DELETE requests normally return
-     * no content.
-     */
+      DELETE / PATCH requests may return
+      no content.
+    */
+
     if (
       response.status === 204 ||
       response.status === 201
     ) {
 
-      /*
-       * 201 may contain data, so try to
-       * read it when possible.
-       */
-      if (
-        response.status === 201
-      ) {
+      const text =
+        await response.text();
 
-        try {
-          return await response.json();
-        } catch {
-          return [];
-        }
+      if (!text) {
+        return [];
       }
 
-      return [];
+      try {
+        return JSON.parse(text);
+      } catch {
+        return [];
+      }
     }
 
 
@@ -99,7 +97,7 @@ async function supabaseRequest(
   } catch (err) {
 
     console.error(
-      'Supabase API Connection Error:',
+      "Supabase API Connection Error:",
       err
     );
 
@@ -128,12 +126,21 @@ async function fetchGoogleBookMetadata(
   }
 
 
+  const url =
+    `https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=1`;
+
+
   try {
 
     const res =
-      await fetch(
-        `https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=1`
+      await fetch(url);
+
+
+    if (!res.ok) {
+      throw new Error(
+        `Google Books error ${res.status}`
       );
+    }
 
 
     const data =
@@ -150,8 +157,14 @@ async function fetchGoogleBookMetadata(
 
 
       let cover =
-        volumeInfo.imageLinks?.thumbnail || '';
+        volumeInfo.imageLinks?.thumbnail ||
+        '';
 
+
+      /*
+        Google sometimes returns HTTP covers.
+        Upgrade to HTTPS.
+      */
 
       if (
         cover.startsWith('http://')
@@ -170,7 +183,8 @@ async function fetchGoogleBookMetadata(
         author:
           volumeInfo.authors
             ? volumeInfo.authors.join(', ')
-            : author || 'Unknown Author',
+            : author ||
+              'Unknown Author',
 
         description:
           volumeInfo.description ||
@@ -188,7 +202,7 @@ async function fetchGoogleBookMetadata(
   } catch (e) {
 
     console.error(
-      'Google Books search fell short:',
+      "Google Books search failed:",
       e
     );
   }
@@ -197,7 +211,8 @@ async function fetchGoogleBookMetadata(
   return {
 
     author:
-      author || 'Unknown Author',
+      author ||
+      'Unknown Author',
 
     description:
       'No description found.',
@@ -212,7 +227,7 @@ async function fetchGoogleBookMetadata(
 
 
 /* =========================================================
-   GET UNSWIPED BOOKS
+   GET BOOKS THE USER HAS NOT YET VOTED ON
    ========================================================= */
 
 export async function apiGetUnswipedBooks(
@@ -225,12 +240,25 @@ export async function apiGetUnswipedBooks(
     );
 
 
+  /*
+    If the swipe query fails, don't silently
+    pretend the user has never voted.
+  */
+
+  if (swipedData === null) {
+
+    console.error(
+      'Could not retrieve swipe history.'
+    );
+
+    return [];
+  }
+
+
   const excludedIds =
-    swipedData
-      ? swipedData.map(
-          s => s.book_id
-        )
-      : [];
+    swipedData.map(
+      s => s.book_id
+    );
 
 
   let path =
@@ -262,23 +290,78 @@ export async function apiLogSwipe(
   direction
 ) {
 
-  await supabaseRequest(
-    'swipes',
-    {
-      method: 'POST',
+  const data =
+    await supabaseRequest(
+      'swipes',
+      {
+        method: 'POST',
 
-      body:
-        JSON.stringify({
-          user_id:
-            username,
+        body:
+          JSON.stringify({
+            user_id:
+              username,
 
-          book_id:
-            bookId,
+            book_id:
+              bookId,
 
-          direction
-        })
-    }
-  );
+            direction:
+              direction
+          })
+      }
+    );
+
+
+  return data;
+}
+
+
+/* =========================================================
+   RESET ALL SWIPES FOR ONE USER
+   ========================================================= */
+
+export async function apiResetSwipes(
+  username
+) {
+
+  const encodedUsername =
+    encodeURIComponent(username);
+
+
+  const result =
+    await supabaseRequest(
+      `swipes?user_id=eq.${encodedUsername}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Prefer':
+            'return=minimal'
+        }
+      }
+    );
+
+
+  /*
+    supabaseRequest returns null
+    when there is an error.
+  */
+
+  if (result === null) {
+
+    return {
+      data: null,
+
+      error: {
+        message:
+          'Supabase rejected the reset request. Check the DELETE policy on the swipes table.'
+      }
+    };
+  }
+
+
+  return {
+    data: result,
+    error: null
+  };
 }
 
 
@@ -322,6 +405,11 @@ export async function apiAddBook(
       {
         method: 'POST',
 
+        headers: {
+          'Prefer':
+            'return=representation'
+        },
+
         body:
           JSON.stringify({
 
@@ -358,12 +446,13 @@ export async function apiAddBook(
               'Failed to post book record to cloud server.'
           }
         : null
+
   };
 }
 
 
 /* =========================================================
-   GET GROUP MATCHES
+   GET GROUP MATCHES / LEADERBOARD
    ========================================================= */
 
 export async function apiGetMatches() {
@@ -395,17 +484,17 @@ export async function apiGetMatches() {
   swipes.forEach(
     swipe => {
 
-      const bId =
+      const bookId =
         String(
           swipe.book_id
         );
 
 
       if (
-        !matchCounts[bId]
+        !matchCounts[bookId]
       ) {
 
-        matchCounts[bId] = {
+        matchCounts[bookId] = {
           count: 0,
           voters: []
         };
@@ -418,16 +507,20 @@ export async function apiGetMatches() {
         ).trim();
 
 
+      /*
+        Make sure one person cannot
+        count twice for the same book.
+      */
+
       if (
-        !matchCounts[bId]
+        !matchCounts[bookId]
           .voters
           .includes(userId)
       ) {
 
-        matchCounts[bId]
-          .count += 1;
+        matchCounts[bookId].count += 1;
 
-        matchCounts[bId]
+        matchCounts[bookId]
           .voters
           .push(userId);
       }
@@ -446,6 +539,7 @@ export async function apiGetMatches() {
           matchCounts[
             String(book.id)
           ]?.count || 0
+
       })
     )
 
@@ -459,41 +553,4 @@ export async function apiGetMatches() {
         b.voteCount -
         a.voteCount
     );
-}
-
-
-/* =========================================================
-   RESET CURRENT USER'S SWIPES
-   ========================================================= */
-
-export async function apiResetSwipes(
-  username
-) {
-
-  const path =
-    `swipes?user_id=eq.${encodeURIComponent(username)}`;
-
-
-  const result =
-    await supabaseRequest(
-      path,
-      {
-        method: 'DELETE'
-      }
-    );
-
-
-  return {
-
-    success:
-      result !== null,
-
-    error:
-      result === null
-        ? {
-            message:
-              'Failed to reset your swipes.'
-          }
-        : null
-  };
 }
