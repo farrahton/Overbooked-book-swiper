@@ -27,6 +27,7 @@ window.saveUsername = saveUsername;
 window.handleManualSwipe = handleManualSwipe;
 window.toggleModal = toggleModal;
 window.submitBook = submitBook;
+window.manualRefreshDeck = manualRefreshDeck;
 // RESET FEATURE DISABLED FOR NOW
 // window.resetMySwipes = resetMySwipes;
 
@@ -85,36 +86,13 @@ function saveUsername() {
 
 function initApp() {
 
-  document
-    .getElementById('user-display')
-    .innerText =
-      `Swiping as: ${currentUser}`;
+    document
+        .getElementById('user-display')
+        .innerText =
+            `Swiping as: ${currentUser}`;
 
-  refreshDeck();
+    refreshDeck();
 
-  /*
-    Check for newly added books periodically.
-
-    IMPORTANT:
-    We only refresh when there is no active
-    book card. This prevents the current card
-    from disappearing every 10 seconds.
-  */
-
-  if (refreshTimer) {
-    clearInterval(refreshTimer);
-  }
-
-  refreshTimer = setInterval(() => {
-
-    const activeCard =
-      document.querySelector('.book-card');
-
-    if (!activeCard) {
-      refreshDeck();
-    }
-
-  }, 10000);
 }
 
 
@@ -145,6 +123,34 @@ async function refreshDeck() {
     );
 
   }
+}
+
+
+// =========================================
+// MANUAL REFRESH BUTTON
+// =========================================
+
+async function manualRefreshDeck() {
+
+    const button =
+        document.getElementById('refresh-button');
+
+    if (!button) return;
+
+    button.disabled = true;
+    button.innerText = '↻ Loading...';
+
+    try {
+
+        await refreshDeck();
+
+    } finally {
+
+        button.disabled = false;
+        button.innerText = '↻ Refresh';
+
+    }
+
 }
 
 
